@@ -281,7 +281,7 @@ extern int optind;
 #define ABSENT_STRING		(char *)0
 
 /* out-of-band values for representing cancels */
-#define CANCELLED_BOOLEAN	(char)(-2)	/* 254 */
+#define CANCELLED_BOOLEAN	(signed char)(-2)	/* 254 */
 #define CANCELLED_NUMERIC	(-2)
 #define CANCELLED_STRING	(char *)(-1)
 

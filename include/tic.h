@@ -216,12 +216,12 @@ extern NCURSES_EXPORT(const struct name_table_entry * const *) _nc_get_hash_tabl
 #define NOTFOUND	((struct name_table_entry *) 0)
 
 /* out-of-band values for representing absent capabilities */
-#define ABSENT_BOOLEAN		(char)(-1)	/* 255 */
+#define ABSENT_BOOLEAN		(signed char)(-1)	/* 255 */
 #define ABSENT_NUMERIC		(-1)
 #define ABSENT_STRING		(char *)0
 
 /* out-of-band values for representing cancels */
-#define CANCELLED_BOOLEAN	(char)(-2)	/* 254 */
+#define CANCELLED_BOOLEAN	(signed char)(-2)	/* 254 */
 #define CANCELLED_NUMERIC	(-2)
 #define CANCELLED_STRING	(char *)(-1)
 

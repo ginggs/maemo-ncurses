@@ -200,7 +200,7 @@ END		{
 			print  "typedef struct termtype {	/* in-core form of terminfo data */"
 			print  "    char  *term_names;		/* str_table offset of term names */"
 			print  "    char  *str_table;		/* pointer to string table */"
-			print  "    char  *Booleans;		/* array of boolean values */"
+			print  "    signed char  *Booleans;	/* array of boolean values */"
 			print  "    short *Numbers;		/* array of integer values */"
 			print  "    char  **Strings;		/* array of string offsets */"
 			print  ""
