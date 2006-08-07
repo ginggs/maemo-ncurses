@@ -1,3 +1,9 @@
+ncurses (5.4-3.osso1) unstable; urgency=low
+
+  * Added thumb. Fixes: NB#36727
+
+ -- Yauheni Kaliuta <yauheni.kaliuta@nokia.com>  Mon,  7 Aug 2006 13:42:19 +0300
+
 ncurses (5.4-3) unstable; urgency=low
 
   * Apply 20040313 and 20040320 patches from upstream
