@@ -10,8 +10,8 @@ export DH_OPTIONS
 
 # These are important since this is a library package
 soname=5
-vername=5.4
-sodepver = (>= 5.4-1)
+vername=5.7
+sodepver = (>= 5.7-1)
 
 # Name our packages
 package-base=ncurses-base
@@ -32,6 +32,7 @@ fulltempdir=$(workdir)/$(tempdir)
 
 srcdir=$(shell pwd)
 objdir=$(srcdir)/obj
+objdir-static=$(srcdir)/obj-static
 objdir-64=$(srcdir)/obj-64
 wobjdir=$(srcdir)/obj-wide
 objdir-debug=$(srcdir)/obj-debug
@@ -74,14 +75,25 @@ etcterminfofiles=a/ansi c/cons25 c/cygwin d/dumb l/linux m/mach m/mach-bold \
 	x/xterm-mono x/xterm-r5 x/xterm-r6 x/xterm-vt220 \
 	w/wsvt25 w/wsvt25m E/Eterm E/Eterm-color
 
-$(objdir)/config.status: configure
+patch:
+	env QUILT_PATCHES=$(CURDIR)/debian/patches quilt push -a
+	touch $@
+
+$(objdir)/config.status: patch
 	test -d $(objdir) || mkdir $(objdir)
 	cd $(objdir) && CFLAGS="$(CFLAGS)" $(srcdir)/configure \
 		$(CONFARGS) \
 		--with-install-prefix=$(fulltempdir) \
 		--enable-overwrite
 
-$(objdir-64)/config.status: configure
+$(objdir-static)/config.status: patch
+	test -d $(objdir-static) || mkdir $(objdir-static)
+	cd $(objdir-static) && CFLAGS="$(CFLAGS)" $(srcdir)/configure \
+		--without-shared --enable-static \
+		--with-install-prefix=$(fulltempdir) \
+		--enable-overwrite
+
+$(objdir-64)/config.status: patch
 	test -d $(objdir-64) || mkdir $(objdir-64)
 	cd $(objdir-64) && CFLAGS="$(CFLAGS)" CC="gcc -m64" \
 		BUILD_CC="gcc" CXX="g++ -m64" \
@@ -92,7 +104,7 @@ $(objdir-64)/config.status: configure
 		--with-install-prefix=$(fulltempdir) \
 		--enable-overwrite --libdir=/usr/lib64
 
-$(objdir-debug)/config.status: configure
+$(objdir-debug)/config.status: patch
 	test -d $(objdir-debug) || mkdir $(objdir-debug)
 	cd $(objdir-debug) && \
 		CFLAGS="$(CFLAGS) -DTRACE" $(srcdir)/configure \
@@ -100,14 +112,14 @@ $(objdir-debug)/config.status: configure
 		--with-install-prefix=$(fulltempdir) \
 		--enable-overwrite
 
-$(wobjdir)/config.status: configure
+$(wobjdir)/config.status: patch
 	test -d $(wobjdir) || mkdir $(wobjdir)
 	cd $(wobjdir) && CFLAGS="$(CFLAGS)" $(srcdir)/configure \
 		$(CONFARGS) \
 		--with-install-prefix=$(fulltempdir) \
 		--disable-overwrite --enable-widec
 
-$(wobjdir-debug)/config.status: configure
+$(wobjdir-debug)/config.status: patch
 	test -d $(wobjdir-debug) || mkdir $(wobjdir-debug)
 	cd $(wobjdir-debug) && \
 		CFLAGS="$(CFLAGS) -DTRACE" $(srcdir)/configure \
@@ -115,7 +127,7 @@ $(wobjdir-debug)/config.status: configure
 		--with-install-prefix=$(fulltempdir) \
 		--disable-overwrite --enable-widec
 
-build: build-normal build-wide build-debug build-wide-debug $(build_64)
+build: build-normal build-wide build-debug build-wide-debug build-static $(build_64)
 
 build-normal: $(objdir)/config.status
 	# For ia64...
@@ -123,6 +135,10 @@ build-normal: $(objdir)/config.status
 	  && cat Makefile | sed 's, -c ../c++/demo.cc, -O0 -c ../c++/demo.cc,' > Makefile.tem \
 	  && mv -f Makefile.tem Makefile
 	cd $(objdir) && $(MAKE)
+	touch $@
+
+build-static: $(objdir-static)/config.status
+	cd $(objdir-static) && $(MAKE)
 	touch $@
 
 build-64: $(objdir-64)/config.status
@@ -160,6 +176,7 @@ build-wide-debug: $(wobjdir-debug)/config.status
 clean:
 	dh_testdir
 	dh_testroot
+	-env QUILT_PATCHES=$(CURDIR)/debian/patches quilt pop -a
 	rm -f build install
 	rm -rf $(objdir)
 	rm -rf $(objdir-64)
@@ -204,9 +221,8 @@ endif
 
 	# Compile this before moving files into their packages.
 	for ti in xterm hurd rxvt screen; do \
-	  LD_LIBRARY_PATH=$${LD_LIBRARY_PATH}:$(fulltempdir)/usr/lib:$(fulltempdir)/lib \
 		TERMINFO=$(fulltempdir)/usr/share/terminfo \
-		$(tempdir)/usr/bin/tic debian/$$ti.ti; \
+		$(objdir-static)/progs/tic debian/$$ti.ti; \
 	done
 
 	# We keep the libncurses shared library in /lib.

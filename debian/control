@@ -1,7 +1,7 @@
 Source: ncurses
 Section: libs
 Priority: standard
-Build-Depends: debhelper (>= 3.0.23), libc6-dev-sparc64 [sparc], libc6-dev-s390x [s390], lib64gcc1 [sparc s390]
+Build-Depends: quilt, debhelper (>= 3.0.23), libc6-dev-sparc64 [sparc], libc6-dev-s390x [s390], lib64gcc1 [sparc s390]
 Maintainer: Daniel Jacobowitz <ncurses-maint@debian.org>
 Standards-Version: 3.6.1
 
@@ -31,7 +31,7 @@ Package: libncurses5-dbg
 Architecture: any
 Section: libdevel
 Priority: extra
-Depends: libncurses5-dev (= ${Source-Version})
+Depends: libncurses5-dev (= ${Source-Version}), libncurses5 (= ${Source-Version})
 Description: Debugging/profiling libraries for ncurses
  This package contains the debugging libraries for ncurses.
 
@@ -60,7 +60,7 @@ Package: libncursesw5-dbg
 Architecture: any
 Section: libdevel
 Priority: extra
-Depends: libncursesw5-dev (= ${Source-Version})
+Depends: libncursesw5-dev (= ${Source-Version}), libncursesw5 (= ${Source-Version})
 Description: Debugging/profiling libraries for ncurses
  This package contains the debugging libraries for ncursesw.
  .

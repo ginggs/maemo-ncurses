@@ -1,3 +1,16 @@
+ncurses (5.7+20081213-1.maemo1+0m5) unstable; urgency=low
+
+  * This entry has been added by BIFH queue processor
+    Suffix +0m5 added to package revision
+
+ -- mika yrjola <ext-mika.2.yrjola@nokia.com>  Wed, 08 Apr 2009 16:34:51 +0300
+
+ncurses (5.7+20081213-1.maemo1) unstable; urgency=low
+
+  * New upstream release. Fixes: NB#109657.
+
+ -- Alexander Shishkin <ext-alexander.shishkin@nokia.com>  Mon, 06 Apr 2009 11:33:38 +0300
+
 ncurses (5.4-3.osso1) unstable; urgency=low
 
   * Added thumb. Fixes: NB#36727
