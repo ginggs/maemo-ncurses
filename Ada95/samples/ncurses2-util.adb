@@ -7,7 +7,7 @@
 --                                 B O D Y                                  --
 --                                                                          --
 ------------------------------------------------------------------------------
--- Copyright (c) 2000 Free Software Foundation, Inc.                        --
+-- Copyright (c) 2000-2006,2008 Free Software Foundation, Inc.              --
 --                                                                          --
 -- Permission is hereby granted, free of charge, to any person obtaining a  --
 -- copy of this software and associated documentation files (the            --
@@ -35,21 +35,17 @@
 ------------------------------------------------------------------------------
 --  Author: Eugene V. Melaragno <aldomel@ix.netcom.com> 2000
 --  Version Control
---  $Revision: 1.1 $
+--  $Revision: 1.7 $
+--  $Date: 2008/07/26 18:51:20 $
 --  Binding Version 01.00
 ------------------------------------------------------------------------------
-with Terminal_Interface.Curses; use Terminal_Interface.Curses;
+with Ada.Text_IO; use Ada.Text_IO;
 
-with Ada.Text_IO;
-
-with Terminal_Interface.Curses; use Terminal_Interface.Curses;
 pragma Warnings (Off);
 with Terminal_Interface.Curses.Aux;
 pragma Warnings (On);
 
 with Terminal_Interface.Curses.Trace; use Terminal_Interface.Curses.Trace;
-
-with Ada.Text_IO; use Ada.Text_IO;
 
 with Interfaces.C;
 with Interfaces.C.Strings;
@@ -57,7 +53,6 @@ with Interfaces.C.Strings;
 with Ada.Characters.Handling;
 
 with ncurses2.genericPuts;
-
 
 package body ncurses2.util is
 
@@ -104,11 +99,11 @@ package body ncurses2.util is
    end Getchar;
 
    procedure Getchar (win : Window := Standard_Window) is
-      x : Key_Code;
    begin
-      x := Getchar (win);
+      if Getchar (win) < 0 then
+         Beep;
+      end if;
    end Getchar;
-
 
    procedure Pause is
    begin
@@ -116,7 +111,6 @@ package body ncurses2.util is
       Add (Str => "Press any key to continue... ");
       Getchar;
    end Pause;
-
 
    procedure Cannot (s : String) is
       use Interfaces.C;
@@ -161,8 +155,6 @@ package body ncurses2.util is
       Refresh;
    end ShellOut;
 
-
-
    function Is_Digit (c : Key_Code) return Boolean is
    begin
       if c >= 16#100# then
@@ -177,7 +169,6 @@ package body ncurses2.util is
       Add (Str => s);
       Add (Ch => newl);
    end P;
-
 
    function Code_To_Char (c : Key_Code) return Character is
    begin

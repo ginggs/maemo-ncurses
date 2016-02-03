@@ -2,19 +2,17 @@
  *  newdemo.c	-	A demo program using PDCurses. The program illustrate
  *  	 		the use of colours for text output.
  *
- * $Id: newdemo.c,v 1.24 2002/06/29 23:32:18 tom Exp $
+ * $Id: newdemo.c,v 1.31 2008/08/03 20:19:38 tom Exp $
  */
-
-#include <time.h>
 
 #include <test.priv.h>
 
-#define delay_output(x) napms(x)
+#include <time.h>
 
 /*
  *  The Australian map
  */
-const char *AusMap[16] =
+static CONST_MENUS char *AusMap[16] =
 {
     "           A           A ",
     "    N.T. AAAAA       AAAA ",
@@ -35,7 +33,7 @@ const char *AusMap[16] =
  */
 #define NMESSAGES   6
 
-NCURSES_CONST char *messages[] =
+static NCURSES_CONST char *messages[] =
 {
     "Hello from the Land Down Under",
     "The Land of crocs. and a big Red Rock",
@@ -90,8 +88,8 @@ set_colors(WINDOW *win, int pair, int foreground, int background)
     }
 }
 
-static int
-use_colors(WINDOW *win, int pair, int attrs)
+static chtype
+use_colors(WINDOW *win, int pair, chtype attrs)
 {
     if (has_colors()) {
 	if (pair > COLOR_PAIRS)
@@ -225,12 +223,13 @@ main(int argc GCC_UNUSED, char *argv[]GCC_UNUSED)
 
     setlocale(LC_ALL, "");
 
+    CATCHALL(trap);
+
     initscr();
     if (has_colors())
 	start_color();
     cbreak();
     curs_set(0);
-    signal(SIGINT, trap);
     width = 48;
     height = 14;		/* Create a drawing window */
     win = newwin(height, width, (LINES - height) / 2, (COLS - width) / 2);
@@ -320,6 +319,7 @@ main(int argc GCC_UNUSED, char *argv[]GCC_UNUSED)
 	j = 0;
 	/*  Draw running As across in RED */
 	set_colors(win, 7, COLOR_RED, COLOR_GREEN);
+	memset(save, ' ', sizeof(save));
 	for (i = 2; i < width - 4; ++i) {
 	    k = mvwinch(win, 4, i);
 	    if (k == ERR)

@@ -7,7 +7,7 @@
 --                                 B O D Y                                  --
 --                                                                          --
 ------------------------------------------------------------------------------
--- Copyright (c) 2000 Free Software Foundation, Inc.                        --
+-- Copyright (c) 2000-2004,2006 Free Software Foundation, Inc.              --
 --                                                                          --
 -- Permission is hereby granted, free of charge, to any person obtaining a  --
 -- copy of this software and associated documentation files (the            --
@@ -35,7 +35,8 @@
 ------------------------------------------------------------------------------
 --  Author: Eugene V. Melaragno <aldomel@ix.netcom.com> 2000
 --  Version Control
---  $Revision: 1.1 $
+--  $Revision: 1.7 $
+--  $Date: 2006/06/25 14:24:40 $
 --  Binding Version 01.00
 ------------------------------------------------------------------------------
 with ncurses2.util; use ncurses2.util;
@@ -63,15 +64,17 @@ procedure ncurses2.slk_test is
                          Len : int) return int;
       pragma Import (C, Wgetnstr, "wgetnstr");
 
-      Txt : char_array (0 .. 10);
+      --  FIXME: how to construct "(Len > 0) ? Len : 80"?
+      Ask : constant Interfaces.C.size_t := Interfaces.C.size_t'Val (Len + 80);
+      Txt : char_array (0 .. Ask);
+
    begin
       Txt (0) := Interfaces.C.char'First;
-      if Wgetnstr (Win, Txt, 8) = Curses_Err then
+      if Wgetnstr (Win, Txt, Txt'Length) = Curses_Err then
          raise Curses_Exception;
       end if;
       Str := To_Unbounded_String (To_Ada (Txt, True));
    end myGet;
-
 
    use Int_IO;
 

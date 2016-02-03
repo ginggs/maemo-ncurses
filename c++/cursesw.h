@@ -1,6 +1,7 @@
 // * This makes emacs happy -*-Mode: C++;-*-
+// vile:cppmode
 /****************************************************************************
- * Copyright (c) 1998-2001,2004 Free Software Foundation, Inc.              *
+ * Copyright (c) 1998-2007,2008 Free Software Foundation, Inc.              *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -30,15 +31,9 @@
 #ifndef NCURSES_CURSESW_H_incl
 #define NCURSES_CURSESW_H_incl 1
 
-// $Id: cursesw.h,v 1.30 2004/02/08 00:11:54 tom Exp $
+// $Id: cursesw.h,v 1.48 2008/01/19 21:09:10 tom Exp $
 
 #include <etip.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#if HAVE_STRSTREAM_H && (USE_STRSTREAM_VSCAN||USE_STRSTREAM_VSCAN_CAST)
-#include <strstream.h>
-#endif
 
 extern "C" {
 #  include   <curses.h>
@@ -60,16 +55,17 @@ inline int UNDEF(addch)(chtype ch)  { return addch(ch); }
 #define addch UNDEF(addch)
 #endif
 
-#ifdef echochar
-inline int UNDEF(echochar)(chtype ch)  { return echochar(ch); }
-#undef echochar
-#define echochar UNDEF(echochar)
+#ifdef addchstr
+inline int UNDEF(addchstr)(chtype *at) { return addchstr(at); }
+#undef addchstr
+#define addchstr UNDEF(addchstr)
 #endif
 
-#ifdef insdelln
-inline int UNDEF(insdelln)(int n)  { return insdelln(n); }
-#undef insdelln
-#define insdelln UNDEF(insdelln)
+#ifdef addnstr
+inline int UNDEF(addnstr)(const char *str, int n)
+{ return addnstr(str, n); }
+#undef addnstr
+#define addnstr UNDEF(addnstr)
 #endif
 
 #ifdef addstr
@@ -78,16 +74,16 @@ inline int UNDEF(addstr)(const char * str)  { return addstr(str); }
 #define addstr UNDEF(addstr)
 #endif
 
-#ifdef attron
-inline int UNDEF(attron)(chtype at) { return attron(at); }
-#undef attron
-#define attron UNDEF(attron)
-#endif
-
 #ifdef attroff
 inline int UNDEF(attroff)(chtype at) { return attroff(at); }
 #undef attroff
 #define attroff UNDEF(attroff)
+#endif
+
+#ifdef attron
+inline int UNDEF(attron)(chtype at) { return attron(at); }
+#undef attron
+#define attron UNDEF(attron)
 #endif
 
 #ifdef attrset
@@ -96,10 +92,16 @@ inline chtype UNDEF(attrset)(chtype at) { return attrset(at); }
 #define attrset UNDEF(attrset)
 #endif
 
-#ifdef color_set
-inline chtype UNDEF(color_set)(short p, void* opts) { return color_set(p, opts); }
-#undef color_set
-#define color_set UNDEF(color_set)
+#ifdef bkgd
+inline int UNDEF(bkgd)(chtype ch) { return bkgd(ch); }
+#undef bkgd
+#define bkgd UNDEF(bkgd)
+#endif
+
+#ifdef bkgdset
+inline void UNDEF(bkgdset)(chtype ch) { bkgdset(ch); }
+#undef bkgdset
+#define bkgdset UNDEF(bkgdset)
 #endif
 
 #ifdef border
@@ -115,18 +117,11 @@ inline int UNDEF(box)(WINDOW *win, int v, int h) { return box(win, v, h); }
 #define box UNDEF(box)
 #endif
 
-#ifdef mvwhline
-inline int UNDEF(mvwhline)(WINDOW *win, int y, int x, chtype c, int n) {
-  return mvwhline(win, y, x, c, n); }
-#undef mvwhline
-#define mvwhline UNDEF(mvwhline)
-#endif
-
-#ifdef mvwvline
-inline int UNDEF(mvwvline)(WINDOW *win, int y, int x, chtype c, int n) {
-  return mvwvline(win, y, x, c, n); }
-#undef mvwvline
-#define mvwvline UNDEF(mvwvline)
+#ifdef chgat
+inline int UNDEF(chgat)(int n, attr_t attr, short color, const void *opts) {
+  return chgat(n, attr, color, opts); }
+#undef chgat
+#define chgat UNDEF(chgat)
 #endif
 
 #ifdef clear
@@ -155,6 +150,18 @@ inline int UNDEF(clrtoeol)()  { return clrtoeol(); }
 #define clrtoeol UNDEF(clrtoeol)
 #endif
 
+#ifdef color_set
+inline chtype UNDEF(color_set)(short p, void* opts) { return color_set(p, opts); }
+#undef color_set
+#define color_set UNDEF(color_set)
+#endif
+
+#ifdef crmode
+inline int UNDEF(crmode)(void) { return crmode(); }
+#undef crmode
+#define crmode UNDEF(crmode)
+#endif
+
 #ifdef delch
 inline int UNDEF(delch)()  { return delch(); }
 #undef delch
@@ -167,10 +174,22 @@ inline int UNDEF(deleteln)()  { return deleteln(); }
 #define deleteln UNDEF(deleteln)
 #endif
 
+#ifdef echochar
+inline int UNDEF(echochar)(chtype ch)  { return echochar(ch); }
+#undef echochar
+#define echochar UNDEF(echochar)
+#endif
+
 #ifdef erase
 inline int UNDEF(erase)()  { return erase(); }
 #undef erase
 #define erase UNDEF(erase)
+#endif
+
+#ifdef fixterm
+inline int UNDEF(fixterm)(void) { return fixterm(); }
+#undef fixterm
+#define fixterm UNDEF(fixterm)
 #endif
 
 #ifdef flushok
@@ -182,104 +201,10 @@ inline int UNDEF(flushok)(WINDOW* _win, bool _bf)  {
 #define _no_flushok
 #endif
 
-#ifdef getch
-inline int UNDEF(getch)()  { return getch(); }
-#undef getch
-#define getch UNDEF(getch)
-#endif
-
-#ifdef getstr
-inline int UNDEF(getstr)(char *_str)  { return getstr(_str); }
-#undef getstr
-#define getstr UNDEF(getstr)
-#endif
-
-#ifdef instr
-inline int UNDEF(instr)(char *_str)  { return instr(_str); }
-#undef instr
-#define instr UNDEF(instr)
-#endif
-
-#ifdef innstr
-inline int UNDEF(innstr)(char *_str, int n)  { return innstr(_str, n); }
-#undef innstr
-#define innstr UNDEF(innstr)
-#endif
-
-#ifdef mvwinnstr
-inline int UNDEF(mvwinnstr)(WINDOW *win, int y, int x, char *_str, int n) {
-  return mvwinnstr(win, y, x, _str, n); }
-#undef mvwinnstr
-#define mvwinnstr UNDEF(mvwinnstr)
-#endif
-
-#ifdef mvinnstr
-inline int UNDEF(mvinnstr)(int y, int x, char *_str, int n) {
-  return mvinnstr(y, x, _str, n); }
-#undef mvinnstr
-#define mvinnstr UNDEF(mvinnstr)
-#endif
-
-#ifdef winsstr
-inline int UNDEF(winsstr)(WINDOW *w, const char *_str)  {
-  return winsstr(w, _str); }
-#undef winsstr
-#define winsstr UNDEF(winsstr)
-#endif
-
-#ifdef mvwinsstr
-inline int UNDEF(mvwinsstr)(WINDOW *w, int y, int x,  const char *_str)  {
-  return mvwinsstr(w, y, x, _str); }
-#undef mvwinsstr
-#define mvwinsstr UNDEF(mvwinsstr)
-#endif
-
-#ifdef insstr
-inline int UNDEF(insstr)(const char *_str)  {
-  return insstr(_str); }
-#undef insstr
-#define insstr UNDEF(insstr)
-#endif
-
-#ifdef mvinsstr
-inline int UNDEF(mvinsstr)(int y, int x, const char *_str)  {
-  return mvinsstr(y, x, _str); }
-#undef mvinsstr
-#define mvinsstr UNDEF(mvinsstr)
-#endif
-
-#ifdef insnstr
-inline int UNDEF(insnstr)(const char *_str, int n)  {
-  return insnstr(_str, n); }
-#undef insnstr
-#define insnstr UNDEF(insnstr)
-#endif
-
-#ifdef mvwinsnstr
-inline int UNDEF(mvwinsnstr)(WINDOW *w, int y, int x, const char *_str, int n) {
-  return mvwinsnstr(w, y, x, _str, n); }
-#undef mvwinsnstr
-#define mvwinsnstr UNDEF(mvwinsnstr)
-#endif
-
-#ifdef mvinsnstr
-inline int UNDEF(mvinsnstr)(int y, int x, const char *_str, int n) {
-  return mvinsnstr(y, x, _str, n); }
-#undef mvinsnstr
-#define mvinsnstr UNDEF(mvinsnstr)
-#endif
-
-#ifdef getnstr
-inline int UNDEF(getnstr)(char *_str, int n)  { return getnstr(_str, n); }
-#undef getnstr
-#define getnstr UNDEF(getnstr)
-#endif
-
-#ifdef getyx
-inline void UNDEF(getyx)(const WINDOW* win, int& y, int& x) {
-  getyx(win, y, x); }
-#undef getyx
-#define getyx UNDEF(getyx)
+#ifdef getattrs
+inline int UNDEF(getattrs)(WINDOW *win) { return getattrs(win); }
+#undef getattrs
+#define getattrs UNDEF(getattrs)
 #endif
 
 #ifdef getbegyx
@@ -288,10 +213,47 @@ inline void UNDEF(getbegyx)(WINDOW* win, int& y, int& x) { getbegyx(win, y, x); 
 #define getbegyx UNDEF(getbegyx)
 #endif
 
+#ifdef getbkgd
+inline chtype UNDEF(getbkgd)(const WINDOW *win) { return getbkgd(win); }
+#undef getbkgd
+#define getbkgd UNDEF(getbkgd)
+#endif
+
+#ifdef getch
+inline int UNDEF(getch)()  { return getch(); }
+#undef getch
+#define getch UNDEF(getch)
+#endif
+
 #ifdef getmaxyx
 inline void UNDEF(getmaxyx)(WINDOW* win, int& y, int& x) { getmaxyx(win, y, x); }
 #undef getmaxyx
 #define getmaxyx UNDEF(getmaxyx)
+#endif
+
+#ifdef getnstr
+inline int UNDEF(getnstr)(char *_str, int n)  { return getnstr(_str, n); }
+#undef getnstr
+#define getnstr UNDEF(getnstr)
+#endif
+
+#ifdef getparyx
+inline void UNDEF(getparyx)(WINDOW* win, int& y, int& x) { getparyx(win, y, x); }
+#undef getparyx
+#define getparyx UNDEF(getparyx)
+#endif
+
+#ifdef getstr
+inline int UNDEF(getstr)(char *_str)  { return getstr(_str); }
+#undef getstr
+#define getstr UNDEF(getstr)
+#endif
+
+#ifdef getyx
+inline void UNDEF(getyx)(const WINDOW* win, int& y, int& x) {
+  getyx(win, y, x); }
+#undef getyx
+#define getyx UNDEF(getyx)
 #endif
 
 #ifdef hline
@@ -306,16 +268,60 @@ inline chtype UNDEF(inch)()  { return inch(); }
 #define inch UNDEF(inch)
 #endif
 
+#ifdef inchstr
+inline int UNDEF(inchstr)(chtype *str)  { return inchstr(str); }
+#undef inchstr
+#define inchstr UNDEF(inchstr)
+#endif
+
+#ifdef innstr
+inline int UNDEF(innstr)(char *_str, int n)  { return innstr(_str, n); }
+#undef innstr
+#define innstr UNDEF(innstr)
+#endif
+
 #ifdef insch
-inline int UNDEF(insch)(char c)  { return insch(c); }
+inline int UNDEF(insch)(chtype c)  { return insch(c); }
 #undef insch
 #define insch UNDEF(insch)
+#endif
+
+#ifdef insdelln
+inline int UNDEF(insdelln)(int n)  { return insdelln(n); }
+#undef insdelln
+#define insdelln UNDEF(insdelln)
 #endif
 
 #ifdef insertln
 inline int UNDEF(insertln)()  { return insertln(); }
 #undef insertln
 #define insertln UNDEF(insertln)
+#endif
+
+#ifdef insnstr
+inline int UNDEF(insnstr)(const char *_str, int n)  {
+  return insnstr(_str, n); }
+#undef insnstr
+#define insnstr UNDEF(insnstr)
+#endif
+
+#ifdef insstr
+inline int UNDEF(insstr)(const char *_str)  {
+  return insstr(_str); }
+#undef insstr
+#define insstr UNDEF(insstr)
+#endif
+
+#ifdef instr
+inline int UNDEF(instr)(char *_str)  { return instr(_str); }
+#undef instr
+#define instr UNDEF(instr)
+#endif
+
+#ifdef intrflush
+inline void UNDEF(intrflush)(WINDOW *win, bool bf) { intrflush(); }
+#undef intrflush
+#define intrflush UNDEF(intrflush)
 #endif
 
 #ifdef leaveok
@@ -332,16 +338,265 @@ inline int UNDEF(move)(int x, int y)  { return move(x, y); }
 #define move UNDEF(move)
 #endif
 
-#ifdef refresh
-inline int UNDEF(refresh)()  { return refresh(); }
-#undef refresh
-#define refresh UNDEF(refresh)
+#ifdef mvaddch
+inline int UNDEF(mvaddch)(int y, int x, chtype ch)
+{ return mvaddch(y, x, ch); }
+#undef mvaddch
+#define mvaddch UNDEF(mvaddch)
+#endif
+
+#ifdef mvaddnstr
+inline int UNDEF(mvaddnstr)(int y, int x, const char *str, int n)
+{ return mvaddnstr(y, x, str, n); }
+#undef mvaddnstr
+#define mvaddnstr UNDEF(mvaddnstr)
+#endif
+
+#ifdef mvaddstr
+inline int UNDEF(mvaddstr)(int y, int x, const char * str)
+{ return mvaddstr(y, x, str); }
+#undef mvaddstr
+#define mvaddstr UNDEF(mvaddstr)
+#endif
+
+#ifdef mvchgat
+inline int UNDEF(mvchgat)(int y, int x, int n,
+			  attr_t attr, short color, const void *opts) {
+  return mvchgat(y, x, n, attr, color, opts); }
+#undef mvchgat
+#define mvchgat UNDEF(mvchgat)
+#endif
+
+#ifdef mvdelch
+inline int UNDEF(mvdelch)(int y, int x) { return mvdelch(y, x);}
+#undef mvdelch
+#define mvdelch UNDEF(mvdelch)
+#endif
+
+#ifdef mvgetch
+inline int UNDEF(mvgetch)(int y, int x) { return mvgetch(y, x);}
+#undef mvgetch
+#define mvgetch UNDEF(mvgetch)
+#endif
+
+#ifdef mvgetnstr
+inline int UNDEF(mvgetnstr)(int y, int x, char *str, int n) {
+  return mvgetnstr(y, x, str, n);}
+#undef mvgetnstr
+#define mvgetnstr UNDEF(mvgetnstr)
+#endif
+
+#ifdef mvgetstr
+inline int UNDEF(mvgetstr)(int y, int x, char *str) {return mvgetstr(y, x, str);}
+#undef mvgetstr
+#define mvgetstr UNDEF(mvgetstr)
+#endif
+
+#ifdef mvinch
+inline chtype UNDEF(mvinch)(int y, int x) { return mvinch(y, x);}
+#undef mvinch
+#define mvinch UNDEF(mvinch)
+#endif
+
+#ifdef mvinnstr
+inline int UNDEF(mvinnstr)(int y, int x, char *_str, int n) {
+  return mvinnstr(y, x, _str, n); }
+#undef mvinnstr
+#define mvinnstr UNDEF(mvinnstr)
+#endif
+
+#ifdef mvinsch
+inline int UNDEF(mvinsch)(int y, int x, chtype c)
+{ return mvinsch(y, x, c); }
+#undef mvinsch
+#define mvinsch UNDEF(mvinsch)
+#endif
+
+#ifdef mvinsnstr
+inline int UNDEF(mvinsnstr)(int y, int x, const char *_str, int n) {
+  return mvinsnstr(y, x, _str, n); }
+#undef mvinsnstr
+#define mvinsnstr UNDEF(mvinsnstr)
+#endif
+
+#ifdef mvinsstr
+inline int UNDEF(mvinsstr)(int y, int x, const char *_str)  {
+  return mvinsstr(y, x, _str); }
+#undef mvinsstr
+#define mvinsstr UNDEF(mvinsstr)
+#endif
+
+#ifdef mvwaddch
+inline int UNDEF(mvwaddch)(WINDOW *win, int y, int x, const chtype ch)
+{ return mvwaddch(win, y, x, ch); }
+#undef mvwaddch
+#define mvwaddch UNDEF(mvwaddch)
+#endif
+
+#ifdef mvwaddchnstr
+inline int UNDEF(mvwaddchnstr)(WINDOW *win, int y, int x, const chtype *str, int n)
+{ return mvwaddchnstr(win, y, x, str, n); }
+#undef mvwaddchnstr
+#define mvwaddchnstr UNDEF(mvwaddchnstr)
+#endif
+
+#ifdef mvwaddchstr
+inline int UNDEF(mvwaddchstr)(WINDOW *win, int y, int x, const chtype *str)
+{ return mvwaddchstr(win, y, x, str); }
+#undef mvwaddchstr
+#define mvwaddchstr UNDEF(mvwaddchstr)
+#endif
+
+#ifdef mvwaddnstr
+inline int UNDEF(mvwaddnstr)(WINDOW *win, int y, int x, const char *str, int n)
+{ return mvwaddnstr(win, y, x, str, n); }
+#undef mvwaddnstr
+#define mvwaddnstr UNDEF(mvwaddnstr)
+#endif
+
+#ifdef mvwaddstr
+inline int UNDEF(mvwaddstr)(WINDOW *win, int y, int x, const char * str)
+{ return mvwaddstr(win, y, x, str); }
+#undef mvwaddstr
+#define mvwaddstr UNDEF(mvwaddstr)
+#endif
+
+#ifdef mvwchgat
+inline int UNDEF(mvwchgat)(WINDOW *win, int y, int x, int n,
+			   attr_t attr, short color, const void *opts) {
+  return mvwchgat(win, y, x, n, attr, color, opts); }
+#undef mvwchgat
+#define mvwchgat UNDEF(mvwchgat)
+#endif
+
+#ifdef mvwdelch
+inline int UNDEF(mvwdelch)(WINDOW *win, int y, int x)
+{ return mvwdelch(win, y, x); }
+#undef mvwdelch
+#define mvwdelch UNDEF(mvwdelch)
+#endif
+
+#ifdef mvwgetch
+inline int UNDEF(mvwgetch)(WINDOW *win, int y, int x) { return mvwgetch(win, y, x);}
+#undef mvwgetch
+#define mvwgetch UNDEF(mvwgetch)
+#endif
+
+#ifdef mvwgetnstr
+inline int UNDEF(mvwgetnstr)(WINDOW *win, int y, int x, char *str, int n)
+{return mvwgetnstr(win, y, x, str, n);}
+#undef mvwgetnstr
+#define mvwgetnstr UNDEF(mvwgetnstr)
+#endif
+
+#ifdef mvwgetstr
+inline int UNDEF(mvwgetstr)(WINDOW *win, int y, int x, char *str)
+{return mvwgetstr(win, y, x, str);}
+#undef mvwgetstr
+#define mvwgetstr UNDEF(mvwgetstr)
+#endif
+
+#ifdef mvwhline
+inline int UNDEF(mvwhline)(WINDOW *win, int y, int x, chtype c, int n) {
+  return mvwhline(win, y, x, c, n); }
+#undef mvwhline
+#define mvwhline UNDEF(mvwhline)
+#endif
+
+#ifdef mvwinch
+inline chtype UNDEF(mvwinch)(WINDOW *win, int y, int x) {
+  return mvwinch(win, y, x);}
+#undef mvwinch
+#define mvwinch UNDEF(mvwinch)
+#endif
+
+#ifdef mvwinchnstr
+inline int UNDEF(mvwinchnstr)(WINDOW *win, int y, int x, chtype *str, int n)  { return mvwinchnstr(win, y, x, str, n); }
+#undef mvwinchnstr
+#define mvwinchnstr UNDEF(mvwinchnstr)
+#endif
+
+#ifdef mvwinchstr
+inline int UNDEF(mvwinchstr)(WINDOW *win, int y, int x, chtype *str)  { return mvwinchstr(win, y, x, str); }
+#undef mvwinchstr
+#define mvwinchstr UNDEF(mvwinchstr)
+#endif
+
+#ifdef mvwinnstr
+inline int UNDEF(mvwinnstr)(WINDOW *win, int y, int x, char *_str, int n) {
+  return mvwinnstr(win, y, x, _str, n); }
+#undef mvwinnstr
+#define mvwinnstr UNDEF(mvwinnstr)
+#endif
+
+#ifdef mvwinsch
+inline int UNDEF(mvwinsch)(WINDOW *win, int y, int x, chtype c)
+{ return mvwinsch(win, y, x, c); }
+#undef mvwinsch
+#define mvwinsch UNDEF(mvwinsch)
+#endif
+
+#ifdef mvwinsnstr
+inline int UNDEF(mvwinsnstr)(WINDOW *w, int y, int x, const char *_str, int n) {
+  return mvwinsnstr(w, y, x, _str, n); }
+#undef mvwinsnstr
+#define mvwinsnstr UNDEF(mvwinsnstr)
+#endif
+
+#ifdef mvwinsstr
+inline int UNDEF(mvwinsstr)(WINDOW *w, int y, int x,  const char *_str)  {
+  return mvwinsstr(w, y, x, _str); }
+#undef mvwinsstr
+#define mvwinsstr UNDEF(mvwinsstr)
+#endif
+
+#ifdef mvwvline
+inline int UNDEF(mvwvline)(WINDOW *win, int y, int x, chtype c, int n) {
+  return mvwvline(win, y, x, c, n); }
+#undef mvwvline
+#define mvwvline UNDEF(mvwvline)
+#endif
+
+#ifdef napms
+inline void UNDEF(napms)(unsigned long x) { napms(x); }
+#undef napms
+#define napms UNDEF(napms)
+#endif
+
+#ifdef nocrmode
+inline int UNDEF(nocrmode)(void) { return nocrmode(); }
+#undef nocrmode
+#define nocrmode UNDEF(nocrmode)
+#endif
+
+#ifdef nodelay
+inline void UNDEF(nodelay)() { nodelay(); }
+#undef nodelay
+#define nodelay UNDEF(nodelay)
 #endif
 
 #ifdef redrawwin
 inline int UNDEF(redrawwin)(WINDOW *win)  { return redrawwin(win); }
 #undef redrawwin
 #define redrawwin UNDEF(redrawwin)
+#endif
+
+#ifdef refresh
+inline int UNDEF(refresh)()  { return refresh(); }
+#undef refresh
+#define refresh UNDEF(refresh)
+#endif
+
+#ifdef resetterm
+inline int UNDEF(resetterm)(void) { return resetterm(); }
+#undef resetterm
+#define resetterm UNDEF(resetterm)
+#endif
+
+#ifdef saveterm
+inline int UNDEF(saveterm)(void) { return saveterm(); }
+#undef saveterm
+#define saveterm UNDEF(saveterm)
 #endif
 
 #ifdef scrl
@@ -424,58 +679,22 @@ inline int UNDEF(vline)(chtype ch, int n) { return vline(ch, n); }
 #define vline UNDEF(vline)
 #endif
 
-#ifdef waddstr
-inline int UNDEF(waddstr)(WINDOW *win, char *str) { return waddstr(win, str); }
-#undef waddstr
-#define waddstr UNDEF(waddstr)
-#endif
-
 #ifdef waddchstr
 inline int UNDEF(waddchstr)(WINDOW *win, chtype *at) { return waddchstr(win, at); }
 #undef waddchstr
 #define waddchstr UNDEF(waddchstr)
 #endif
 
-#ifdef wstandend
-inline int UNDEF(wstandend)(WINDOW *win)  { return wstandend(win); }
-#undef wstandend
-#define wstandend UNDEF(wstandend)
+#ifdef waddstr
+inline int UNDEF(waddstr)(WINDOW *win, char *str) { return waddstr(win, str); }
+#undef waddstr
+#define waddstr UNDEF(waddstr)
 #endif
-
-#ifdef wstandout
-inline int UNDEF(wstandout)(WINDOW *win)  { return wstandout(win); }
-#undef wstandout
-#define wstandout UNDEF(wstandout)
-#endif
-
 
 #ifdef wattroff
 inline int UNDEF(wattroff)(WINDOW *win, int att) { return wattroff(win, att); }
 #undef wattroff
 #define wattroff UNDEF(wattroff)
-#endif
-
-#ifdef chgat
-inline int UNDEF(chgat)(int n, attr_t attr, short color, const void *opts) {
-  return chgat(n, attr, color, opts); }
-#undef chgat
-#define chgat UNDEF(chgat)
-#endif
-
-#ifdef mvchgat
-inline int UNDEF(mvchgat)(int y, int x, int n,
-			  attr_t attr, short color, const void *opts) {
-  return mvchgat(y, x, n, attr, color, opts); }
-#undef mvchgat
-#define mvchgat UNDEF(mvchgat)
-#endif
-
-#ifdef mvwchgat
-inline int UNDEF(mvwchgat)(WINDOW *win, int y, int x, int n,
-			   attr_t attr, short color, const void *opts) {
-  return mvwchgat(win, y, x, n, attr, color, opts); }
-#undef mvwchgat
-#define mvwchgat UNDEF(mvwchgat)
 #endif
 
 #ifdef wattrset
@@ -490,208 +709,46 @@ inline chtype UNDEF(winch)(const WINDOW* win) { return winch(win); }
 #define winch UNDEF(winch)
 #endif
 
-#ifdef mvwaddch
-inline int UNDEF(mvwaddch)(WINDOW *win, int y, int x, const chtype ch)
-{ return mvwaddch(win, y, x, ch); }
-#undef mvwaddch
-#define mvwaddch UNDEF(mvwaddch)
+#ifdef winchnstr
+inline int UNDEF(winchnstr)(WINDOW *win, chtype *str, int n)  { return winchnstr(win, str, n); }
+#undef winchnstr
+#define winchnstr UNDEF(winchnstr)
 #endif
 
-#ifdef mvwaddchnstr
-inline int UNDEF(mvwaddchnstr)(WINDOW *win, int y, int x, chtype *str, int n)
-{ return mvwaddchnstr(win, y, x, str, n); }
-#undef mvwaddchnstr
-#define mvwaddchnstr UNDEF(mvwaddchnstr)
+#ifdef winchstr
+inline int UNDEF(winchstr)(WINDOW *win, chtype *str)  { return winchstr(win, str); }
+#undef winchstr
+#define winchstr UNDEF(winchstr)
 #endif
 
-#ifdef mvwaddchstr
-inline int UNDEF(mvwaddchstr)(WINDOW *win, int y, int x, chtype *str)
-{ return mvwaddchstr(win, y, x, str); }
-#undef mvwaddchstr
-#define mvwaddchstr UNDEF(mvwaddchstr)
+#ifdef winsstr
+inline int UNDEF(winsstr)(WINDOW *w, const char *_str)  {
+  return winsstr(w, _str); }
+#undef winsstr
+#define winsstr UNDEF(winsstr)
 #endif
 
-#ifdef addnstr
-inline int UNDEF(addnstr)(const char *str, int n)
-{ return addnstr(str, n); }
-#undef addnstr
-#define addnstr UNDEF(addnstr)
+#ifdef wstandend
+inline int UNDEF(wstandend)(WINDOW *win)  { return wstandend(win); }
+#undef wstandend
+#define wstandend UNDEF(wstandend)
 #endif
 
-#ifdef mvwaddnstr
-inline int UNDEF(mvwaddnstr)(WINDOW *win, int y, int x, const char *str, int n)
-{ return mvwaddnstr(win, y, x, str, n); }
-#undef mvwaddnstr
-#define mvwaddnstr UNDEF(mvwaddnstr)
-#endif
-
-#ifdef mvwaddstr
-inline int UNDEF(mvwaddstr)(WINDOW *win, int y, int x, const char * str)
-{ return mvwaddstr(win, y, x, str); }
-#undef mvwaddstr
-#define mvwaddstr UNDEF(mvwaddstr)
-#endif
-
-#ifdef mvwdelch
-inline int UNDEF(mvwdelch)(WINDOW *win, int y, int x)
-{ return mvwdelch(win, y, x); }
-#undef mvwdelch
-#define mvwdelch UNDEF(mvwdelch)
-#endif
-
-#ifdef mvwgetch
-inline int UNDEF(mvwgetch)(WINDOW *win, int y, int x) { return mvwgetch(win, y, x);}
-#undef mvwgetch
-#define mvwgetch UNDEF(mvwgetch)
-#endif
-
-#ifdef mvwgetstr
-inline int UNDEF(mvwgetstr)(WINDOW *win, int y, int x, char *str)
-{return mvwgetstr(win, y, x, str);}
-#undef mvwgetstr
-#define mvwgetstr UNDEF(mvwgetstr)
-#endif
-
-#ifdef mvwgetnstr
-inline int UNDEF(mvwgetnstr)(WINDOW *win, int y, int x, char *str, int n)
-{return mvwgetnstr(win, y, x, str, n);}
-#undef mvwgetnstr
-#define mvwgetnstr UNDEF(mvwgetnstr)
-#endif
-
-#ifdef mvwinch
-inline chtype UNDEF(mvwinch)(WINDOW *win, int y, int x) {
-  return mvwinch(win, y, x);}
-#undef mvwinch
-#define mvwinch UNDEF(mvwinch)
-#endif
-
-#ifdef mvwinsch
-inline int UNDEF(mvwinsch)(WINDOW *win, int y, int x, char c)
-{ return mvwinsch(win, y, x, c); }
-#undef mvwinsch
-#define mvwinsch UNDEF(mvwinsch)
-#endif
-
-#ifdef mvaddch
-inline int UNDEF(mvaddch)(int y, int x, chtype ch)
-{ return mvaddch(y, x, ch); }
-#undef mvaddch
-#define mvaddch UNDEF(mvaddch)
-#endif
-
-#ifdef mvaddnstr
-inline int UNDEF(mvaddnstr)(int y, int x, const char *str, int n)
-{ return mvaddnstr(y, x, str, n); }
-#undef mvaddnstr
-#define mvaddnstr UNDEF(mvaddnstr)
-#endif
-
-#ifdef mvaddstr
-inline int UNDEF(mvaddstr)(int y, int x, const char * str)
-{ return mvaddstr(y, x, str); }
-#undef mvaddstr
-#define mvaddstr UNDEF(mvaddstr)
-#endif
-
-#ifdef mvdelch
-inline int UNDEF(mvdelch)(int y, int x) { return mvdelch(y, x);}
-#undef mvdelch
-#define mvdelch UNDEF(mvdelch)
-#endif
-
-#ifdef mvgetch
-inline int UNDEF(mvgetch)(int y, int x) { return mvgetch(y, x);}
-#undef mvgetch
-#define mvgetch UNDEF(mvgetch)
-#endif
-
-#ifdef mvgetstr
-inline int UNDEF(mvgetstr)(int y, int x, char *str) {return mvgetstr(y, x, str);}
-#undef mvgetstr
-#define mvgetstr UNDEF(mvgetstr)
-#endif
-
-#ifdef mvgetnstr
-inline int UNDEF(mvgetnstr)(int y, int x, char *str, int n) {
-  return mvgetnstr(y, x, str, n);}
-#undef mvgetnstr
-#define mvgetnstr UNDEF(mvgetnstr)
-#endif
-
-#ifdef mvinch
-inline chtype UNDEF(mvinch)(int y, int x) { return mvinch(y, x);}
-#undef mvinch
-#define mvinch UNDEF(mvinch)
-#endif
-
-#ifdef mvinsch
-inline int UNDEF(mvinsch)(int y, int x, char c)
-{ return mvinsch(y, x, c); }
-#undef mvinsch
-#define mvinsch UNDEF(mvinsch)
-#endif
-
-#ifdef napms
-inline void UNDEF(napms)(unsigned long x) { napms(x); }
-#undef napms
-#define napms UNDEF(napms)
-#endif
-
-#ifdef fixterm
-inline int UNDEF(fixterm)(void) { return fixterm(); }
-#undef fixterm
-#define fixterm UNDEF(fixterm)
-#endif
-
-#ifdef resetterm
-inline int UNDEF(resetterm)(void) { return resetterm(); }
-#undef resetterm
-#define resetterm UNDEF(resetterm)
-#endif
-
-#ifdef saveterm
-inline int UNDEF(saveterm)(void) { return saveterm(); }
-#undef saveterm
-#define saveterm UNDEF(saveterm)
-#endif
-
-#ifdef crmode
-inline int UNDEF(crmode)(void) { return crmode(); }
-#undef crmode
-#define crmode UNDEF(crmode)
-#endif
-
-#ifdef nocrmode
-inline int UNDEF(nocrmode)(void) { return nocrmode(); }
-#undef nocrmode
-#define nocrmode UNDEF(nocrmode)
-#endif
-
-#ifdef getbkgd
-inline chtype UNDEF(getbkgd)(const WINDOW *win) { return getbkgd(win); }
-#undef getbkgd
-#define getbkgd UNDEF(getbkgd)
-#endif
-
-#ifdef bkgd
-inline int UNDEF(bkgd)(chtype ch) { return bkgd(ch); }
-#undef bkgd
-#define bkgd UNDEF(bkgd)
-#endif
-
-#ifdef bkgdset
-inline void UNDEF(bkgdset)(chtype ch) { bkgdset(ch); }
-#undef bkgdset
-#define bkgdset UNDEF(bkgdset)
+#ifdef wstandout
+inline int UNDEF(wstandout)(WINDOW *win)  { return wstandout(win); }
+#undef wstandout
+#define wstandout UNDEF(wstandout)
 #endif
 
 /*
  *
  * C++ class for windows.
  *
- *
  */
+
+extern "C" int     _nc_ripoffline(int, int (*init)(WINDOW*, int));
+extern "C" int     _nc_xx_ripoff_init(WINDOW *, int);
+extern "C" int     _nc_has_mouse(void);
 
 class NCURSES_IMPEXP NCursesWindow
 {
@@ -701,21 +758,23 @@ class NCURSES_IMPEXP NCursesWindow
 private:
   static bool    b_initialized;
   static void    initialize();
-  static int     ripoff_init(WINDOW *, int);
+  void           constructing();
+  friend int     _nc_xx_ripoff_init(WINDOW *, int);
 
-  void           init();
+  void           set_keyboard();
 
   short          getcolor(int getback) const;
+  short          getPair() const;
 
   static int     setpalette(short fore, short back, short pair);
   static int     colorInitialized;
 
   // This private constructor is only used during the initialization
   // of windows generated by ripoffline() calls.
-  NCursesWindow(WINDOW* win, int cols);
+  NCursesWindow(WINDOW* win, int ncols);
 
 protected:
-  void           err_handler(const char *) const THROWS(NCursesException);
+  virtual void   err_handler(const char *) const THROWS(NCursesException);
   // Signal an error with the given message text.
 
   static long count;        // count of all active windows:
@@ -739,16 +798,16 @@ protected:
   NCursesWindow();
 
 public:
-  NCursesWindow(WINDOW* &window);  // useful only for stdscr
+  NCursesWindow(WINDOW* window);   // useful only for stdscr
 
-  NCursesWindow(int lines,         // number of lines
-		int cols,          // number of columns
+  NCursesWindow(int nlines,        // number of lines
+		int ncols,         // number of columns
 		int begin_y,       // line origin
 		int begin_x);      // col origin
 
   NCursesWindow(NCursesWindow& par,// parent window
-		int lines,         // number of lines
-		int cols,          // number of columns
+		int nlines,        // number of lines
+		int ncols,         // number of columns
 		int begin_y,       // absolute or relative
 		int begin_x,       //   origins:
 		char absrel = 'a');// if `a', begin_y & begin_x are
@@ -759,6 +818,18 @@ public:
   // this is the very common case that we want to create the subwindow that
   // is two lines and two columns smaller and begins at (1,1).
   // We may automatically request the box around it.
+
+  NCursesWindow& operator=(const NCursesWindow& rhs)
+  {
+    if (this != &rhs)
+      *this = rhs;
+    return *this;
+  }
+
+  NCursesWindow(const NCursesWindow& rhs)
+    : w(rhs.w), alloced(rhs.alloced), par(rhs.par), subwins(rhs.subwins), sib(rhs.sib)
+  {
+  }
 
   virtual ~NCursesWindow();
 
@@ -807,16 +878,22 @@ public:
   int            width() const { return maxx() + 1; }
   // Number of columns in this window
 
-  int            begx() const { return w->_begx; }
+  int            begx() const { return getbegx(w); }
   // Column of top left corner relative to stdscr
 
-  int            begy() const { return w->_begy; }
+  int            begy() const { return getbegy(w); }
   // Line of top left corner relative to stdscr
 
-  int            maxx() const { return w->_maxx; }
+  int            curx() const { return getcurx(w); }
+  // Column of top left corner relative to stdscr
+
+  int            cury() const { return getcury(w); }
+  // Line of top left corner relative to stdscr
+
+  int            maxx() const { return getmaxx(w) == ERR ? ERR : getmaxx(w)-1; }
   // Largest x coord in window
 
-  int            maxy() const { return w->_maxy; }
+  int            maxy() const { return getmaxy(w) == ERR ? ERR : getmaxy(w)-1; }
   // Largest y coord in window
 
   short          getcolor() const;
@@ -850,6 +927,15 @@ public:
 
   void           getyx(int& y, int& x) const { ::getyx(w, y, x); }
   // Get current position of the cursor
+
+  void           getbegyx(int& y, int& x) const { ::getbegyx(w, y, x); }
+  // Get beginning of the window
+
+  void           getmaxyx(int& y, int& x) const { ::getmaxyx(w, y, x); }
+  // Get size of the window
+
+  void           getparyx(int& y, int& x) const { ::getparyx(w, y, x); }
+  // Get parent's beginning of the window
 
   int            mvcur(int oldrow, int oldcol, int newrow, int newcol) const {
     return ::mvcur(oldrow, oldcol, newrow, newcol); }
@@ -893,6 +979,9 @@ public:
   ;
 #endif
 
+  int            scanw(const char*, va_list);
+    // Perform a scanw function from the window.
+
   int            scanw(int y, int x, const char* fmt, ...)
     // Move the cursor to the requested position and then perform a scanw
     // from the window.
@@ -901,6 +990,10 @@ public:
 #else
   ;
 #endif
+
+  int            scanw(int y, int x, const char* fmt, va_list);
+    // Move the cursor to the requested position and then perform a scanw
+    // from the window.
 
   // -------------------------------------------------------------------------
   // output
@@ -923,7 +1016,17 @@ public:
 
   int            addstr(int y, int x, const char * str, int n=-1) {
     return ::mvwaddnstr(w, y, x, str, n); }
-  // Move the cursor to the requested position and then perform the addstr
+  // Move the cursor to the requested position and then perform the addchstr
+  // as described above.
+
+  int            addchstr(const chtype* str, int n=-1) {
+    return ::waddchnstr(w, str, n); }
+  // Write the string str to the window, stop writing if the terminating
+  // NUL or the limit n is reached. If n is negative, it is ignored.
+
+  int            addchstr(int y, int x, const chtype * str, int n=-1) {
+    return ::mvwaddchnstr(w, y, x, str, n); }
+  // Move the cursor to the requested position and then perform the addchstr
   // as described above.
 
   int            printw(const char* fmt, ...)
@@ -942,12 +1045,28 @@ public:
   ;
 #endif
 
+  int            printw(const char* fmt, va_list args);
+    // Do a formatted print to the window.
+
+  int            printw(int y, int x, const char * fmt, va_list args);
+    // Move the cursor and then do a formatted print to the window.
+
   chtype         inch() const { return ::winch(w); }
   // Retrieve attributed character under the current cursor position.
 
   chtype         inch(int y, int x) { return ::mvwinch(w, y, x); }
   // Move cursor to requested position and then retrieve attributed character
   // at this position.
+
+  int            inchstr(chtype* str, int n=-1) {
+    return ::winchnstr(w, str, n); }
+  // Read the string str from the window, stop reading if the terminating
+  // NUL or the limit n is reached. If n is negative, it is ignored.
+
+  int            inchstr(int y, int x, chtype * str, int n=-1) {
+    return ::mvwinchnstr(w, y, x, str, n); }
+  // Move the cursor to the requested position and then perform the inchstr
+  // as described above.
 
   int            insch(chtype ch) { return ::winsch(w, ch); }
   // Insert attributed character into the window before current cursor
@@ -979,11 +1098,14 @@ public:
   int            attron (chtype at) { return ::wattron (w, at); }
   // Switch on the window attributes;
 
-  int            attroff(chtype at) { return ::wattroff(w, (int) at); }
+  int            attroff(chtype at) { return ::wattroff(w, static_cast<int>(at)); }
   // Switch off the window attributes;
 
-  int            attrset(chtype at) { return ::wattrset(w, (int) at); }
+  int            attrset(chtype at) { return ::wattrset(w, static_cast<int>(at)); }
   // Set the window attributes;
+
+  chtype         attrget() { return ::getattrs(w); }
+  // Get the window attributes;
 
   int            color_set(short color_pair_number, void* opts=NULL) {
     return ::wcolor_set(w, color_pair_number, opts); }
@@ -1100,10 +1222,12 @@ public:
   // If bf is TRUE, use insert/delete line hardware support if possible.
   // Otherwise do it in software.
 
-
   void           idcok(bool bf) { ::idcok(w, bf); }
   // If bf is TRUE, use insert/delete character hardware support if possible.
   // Otherwise do it in software.
+
+  int            touchline(int s, int c) { return ::touchline(w, s, c); }
+  // Mark the given lines as modified.
 
   int            touchwin()   { return ::wtouchln(w, 0, height(), 1); }
   // Mark the whole window as modified.
@@ -1112,7 +1236,7 @@ public:
   // Mark the whole window as unmodified.
 
   int            touchln(int s, int cnt, bool changed=TRUE) {
-    return ::wtouchln(w, s, cnt, (int)(changed?1:0)); }
+    return ::wtouchln(w, s, cnt, static_cast<int>(changed ? 1 : 0)); }
   // Mark cnt lines beginning from line s as changed or unchanged, depending
   // on the value of the changed flag.
 
@@ -1157,8 +1281,12 @@ public:
   // If called with bf=TRUE, any change in the window will cause an
   // automatic immediate refresh()
 
+  int            intrflush(bool bf) { return ::intrflush(w, bf); }
+
   int            keypad(bool bf) { return ::keypad(w, bf); }
   // If called with bf=TRUE, the application will interpret function keys.
+
+  int            nodelay(bool bf) { return ::nodelay(w, bf); }
 
   int            meta(bool bf) { return ::meta(w, bf); }
   // If called with bf=TRUE, keys may generate 8-Bit characters. Otherwise
@@ -1196,12 +1324,20 @@ public:
   int            copywin(NCursesWindow& win,
 			 int sminrow, int smincol,
 			 int dminrow, int dmincol,
-			 int dmaxrow, int dmaxcol, bool overlay=TRUE) {
+			 int dmaxrow, int dmaxcol, bool overlaywin=TRUE) {
     return ::copywin(w, win.w, sminrow, smincol, dminrow, dmincol,
-		     dmaxrow, dmaxcol, (int)(overlay?1:0)); }
+		     dmaxrow, dmaxcol, static_cast<int>(overlaywin ? 1 : 0)); }
   // Overlay or overwrite the rectangle in win given by dminrow,dmincol,
   // dmaxrow,dmaxcol with the rectangle in this window beginning at
   // sminrow,smincol.
+
+  // -------------------------------------------------------------------------
+  // Extended functions
+  // -------------------------------------------------------------------------
+#if defined(NCURSES_EXT_FUNCS) && (NCURSES_EXT_FUNCS != 0)
+  int            wresize(int newLines, int newColumns) {
+    return ::wresize(w, newLines, newColumns); }
+#endif
 
   // -------------------------------------------------------------------------
   // Mouse related
@@ -1228,26 +1364,28 @@ public:
 // -------------------------------------------------------------------------
 // We leave this here for compatibility reasons.
 // -------------------------------------------------------------------------
-class NCURSES_IMPEXP NCursesColorWindow : public NCursesWindow {
+class NCURSES_IMPEXP NCursesColorWindow : public NCursesWindow
+{
 public:
   NCursesColorWindow(WINDOW* &window)   // useful only for stdscr
     : NCursesWindow(window) {
       useColors(); }
 
-  NCursesColorWindow(int lines,         // number of lines
-		     int cols,          // number of columns
+  NCursesColorWindow(int nlines,        // number of lines
+		     int ncols,         // number of columns
 		     int begin_y,       // line origin
 		     int begin_x)       // col origin
-    : NCursesWindow(lines, cols, begin_y, begin_x) {
+    : NCursesWindow(nlines, ncols, begin_y, begin_x) {
       useColors(); }
 
-  NCursesColorWindow(NCursesWindow& par,// parent window
-		     int lines,         // number of lines
-		     int cols,          // number of columns
+  NCursesColorWindow(NCursesWindow& parentWin,// parent window
+		     int nlines,        // number of lines
+		     int ncols,         // number of columns
 		     int begin_y,       // absolute or relative
 		     int begin_x,       //   origins:
 		     char absrel = 'a') // if `a', by & bx are
-    : NCursesWindow(par, lines, cols,   // absolute screen pos,
+    : NCursesWindow(parentWin,
+		    nlines, ncols,	// absolute screen pos,
 		    begin_y, begin_x,   // else if `r', they are
 		    absrel ) {          // relative to par origin
       useColors(); }
@@ -1272,7 +1410,8 @@ public:
 // Pad Support. We allow an association of a pad with a "real" window
 // through which the pad may be viewed.
 // -------------------------------------------------------------------------
-class NCURSES_IMPEXP NCursesPad : public NCursesWindow {
+class NCURSES_IMPEXP NCursesPad : public NCursesWindow
+{
 private:
   NCursesWindow* viewWin;       // the "viewport" window
   NCursesWindow* viewSub;       // the "viewport" subwindow
@@ -1314,8 +1453,28 @@ protected:
   // the refresh() operation is done.
 
 public:
-  NCursesPad(int lines, int cols);
+  NCursesPad(int nlines, int ncols);
   // create a pad with the given size
+
+  NCursesPad& operator=(const NCursesPad& rhs)
+  {
+    if (this != &rhs) {
+      *this = rhs;
+      NCursesWindow::operator=(rhs);
+    }
+    return *this;
+  }
+
+  NCursesPad(const NCursesPad& rhs)
+    : NCursesWindow(rhs),
+      viewWin(rhs.viewWin),
+      viewSub(rhs.viewSub),
+      h_gridsize(rhs.h_gridsize),
+      v_gridsize(rhs.v_gridsize),
+      min_row(rhs.min_row),
+      min_col(rhs.min_col)
+  {
+  }
 
   virtual ~NCursesPad() {}
 
@@ -1364,14 +1523,15 @@ public:
 // A FramedPad is constructed always with a viewport window. This viewport
 // will be framed (by a box() command) and the interior of the box is the
 // viewport subwindow. On the frame we display scrollbar sliders.
-class NCURSES_IMPEXP NCursesFramedPad : public NCursesPad {
+class NCURSES_IMPEXP NCursesFramedPad : public NCursesPad
+{
 protected:
   virtual void OnOperation(int pad_req);
 
 public:
-  NCursesFramedPad(NCursesWindow& win, int lines, int cols,
+  NCursesFramedPad(NCursesWindow& win, int nlines, int ncols,
 		   int v_grid = 1, int h_grid = 1)
-    : NCursesPad(lines, cols) {
+    : NCursesPad(nlines, ncols) {
     NCursesPad::setWindow(win, v_grid, h_grid);
     NCursesPad::setSubWindow(*(new NCursesWindow(win)));
   }
@@ -1393,4 +1553,4 @@ public:
 
 };
 
-#endif // NCURSES_CURSESW_H_incl
+#endif /* NCURSES_CURSESW_H_incl */

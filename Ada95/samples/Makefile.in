@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 1998 Free Software Foundation, Inc.                          #
+# Copyright (c) 1998-2005,2008 Free Software Foundation, Inc.                #
 #                                                                            #
 # Permission is hereby granted, free of charge, to any person obtaining a    #
 # copy of this software and associated documentation files (the "Software"), #
@@ -28,8 +28,7 @@
 #
 #  Author:  Juergen Pfeifer, 1996
 #
-#  Version Control
-#  $Revision: 1.30 $
+#  $Id: Makefile.in,v 1.35 2008/11/23 00:17:20 juergen Exp $
 #
 .SUFFIXES:
 
@@ -65,6 +64,10 @@ CFLAGS_SHARED	= $(CCFLAGS) @CC_SHARED_OPTS@
 
 CFLAGS_DEFAULT	= $(CFLAGS_@DFT_UPR_MODEL@)
 
+REL_VERSION	= @cf_cv_rel_version@
+ABI_VERSION	= @cf_cv_abi_version@
+LOCAL_LIBDIR	= @top_builddir@/lib
+
 LINK		= $(CC)
 LDFLAGS		= @LDFLAGS@ @LD_MODEL@ @LIBS@
 
@@ -84,7 +87,7 @@ ALIB         = @cf_ada_package@
 ABASE        = $(ALIB)-curses
 
 CARGS        =-cargs $(ADAFLAGS)
-LARGS        =-largs -L../../lib @TEST_ARGS@ $(LD_FLAGS) -lAdaCurses @EXTRA_LIBS@
+LARGS        =-largs @TEST_ARG2@ $(LD_FLAGS) -lAdaCurses
  
 PROGS        = tour rain ncurses 
 
@@ -111,19 +114,19 @@ NCURSES_OBJS = ncurses.o        	ncurses2-getch_test.o \
 
 
 all ::  tour$x rain$x ncurses$x
-	@
+	@echo made $@
 
 sources :
-	@
+	@echo made $@
 
 libs \
 install \
 install.libs ::
-	@
+	@echo made $@
 
 uninstall \
 uninstall.libs ::
-	@
+	@echo made $@
 
 ncurses$x :
 	$(ADAMAKE) $(ADAMAKEFLAGS) ncurses $(CARGS) $(LARGS)
@@ -138,16 +141,14 @@ rain$x :
 	$(ADAMAKE) $(ADAMAKEFLAGS) rain $(CARGS) $(LARGS)
 
 mostlyclean:
-	@
+	@echo made $@
 
 clean :: mostlyclean
 	rm -f *.o *.ali b_t*.* *.s $(PROGS) a.out core b_*_test.c *.xr[bs] \
-	explain.msg trace screendump 
+	explain.msg trace screendump b~*.ad[bs]
 
 distclean :: clean
 	rm -f Makefile
 
 realclean :: distclean
-	@
-
-
+	@echo made $@

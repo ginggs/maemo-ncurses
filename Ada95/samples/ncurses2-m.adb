@@ -7,7 +7,7 @@
 --                                 B O D Y                                  --
 --                                                                          --
 ------------------------------------------------------------------------------
--- Copyright (c) 2000,2004 Free Software Foundation, Inc.                   --
+-- Copyright (c) 2000-2006,2008 Free Software Foundation, Inc.              --
 --                                                                          --
 -- Permission is hereby granted, free of charge, to any person obtaining a  --
 -- copy of this software and associated documentation files (the            --
@@ -35,7 +35,8 @@
 ------------------------------------------------------------------------------
 --  Author: Eugene V. Melaragno <aldomel@ix.netcom.com> 2000
 --  Version Control
---  $Revision: 1.2 $
+--  $Revision: 1.8 $
+--  $Date: 2008/07/26 18:47:50 $
 --  Binding Version 01.00
 ------------------------------------------------------------------------------
 --  TODO use Default_Character where appropriate
@@ -55,7 +56,6 @@ with Ada.Command_Line; use Ada.Command_Line;
 
 with Ada.Strings.Unbounded;
 
-
 with ncurses2.util; use ncurses2.util;
 with ncurses2.getch_test;
 with ncurses2.attr_test;
@@ -64,7 +64,6 @@ with ncurses2.demo_panels;
 with ncurses2.color_edit;
 with ncurses2.slk_test;
 with ncurses2.acs_display;
-with ncurses2.color_edit;
 with ncurses2.acs_and_scroll;
 with ncurses2.flushinp_test;
 with ncurses2.test_sgr_attributes;
@@ -174,7 +173,6 @@ package body ncurses2.m is
       return 0; -- Curses_OK;
    end rip_footer;
 
-
    function rip_header (
                         Win : Window;
                         Columns : Column_Count) return Integer;
@@ -236,7 +234,6 @@ package body ncurses2.m is
       Set_KeyPad_Mode (SwitchOn => True);
    end Set_Terminal_Modes;
 
-
    nap_msec : Integer := 1;
 
    function Do_Single_Test (c : Character) return Boolean is
@@ -289,7 +286,6 @@ package body ncurses2.m is
       return True;
    end Do_Single_Test;
 
-
    command : Character;
    my_e_param : Soft_Label_Key_Format := Four_Four;
    assumed_colors : Boolean := False;
@@ -332,7 +328,7 @@ package body ncurses2.m is
                default_colors := True;
             when 'e' =>
                myio.Get (optarg.all, tmpi, length);
-               if Integer (tmpi) > 3 then
+               if tmpi > 3 then
                   usage;
                   return 1;
                end if;
@@ -357,7 +353,6 @@ package body ncurses2.m is
       --   isatty is not available in the standard Ada so skip it.
       save_trace_set := To_trace (save_trace);
       Trace_On (save_trace_set);
-
 
       Init_Soft_Label_Keys (my_e_param);
 
@@ -446,14 +441,8 @@ package body ncurses2.m is
 
          exit when command = 'q';
       end loop;
+      Curses_Free_All;
       return 0; -- TODO ExitProgram(EXIT_SUCCESS);
    end main;
 
 end ncurses2.m;
-
-
-
-
-
-
-

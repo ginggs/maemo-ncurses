@@ -1,7 +1,7 @@
 #!/bin/sh
-# $Id: edit_cfg.sh,v 1.13 2003/12/20 13:14:25 tom Exp $
+# $Id: edit_cfg.sh,v 1.17 2008/08/30 19:44:25 tom Exp $
 ##############################################################################
-# Copyright (c) 1998-2001,2003 Free Software Foundation, Inc.                #
+# Copyright (c) 1998-2007,2008 Free Software Foundation, Inc.                #
 #                                                                            #
 # Permission is hereby granted, free of charge, to any person obtaining a    #
 # copy of this software and associated documentation files (the "Software"), #
@@ -28,7 +28,7 @@
 # authorization.                                                             #
 ##############################################################################
 #
-# Author: Thomas E. Dickey 1997
+# Author: Thomas E. Dickey 1997-on
 #
 # Edit the default value of the etip.h file based on the autoconf-generated
 # values:
@@ -39,16 +39,16 @@
 echo "substituting autoconf'd values from $1 into $2"
 for name in \
 	CPP_HAS_PARAM_INIT \
+	CPP_HAS_STATIC_CAST \
 	ETIP_NEEDS_MATH_EXCEPTION \
 	ETIP_NEEDS_MATH_H \
 	HAVE_BUILTIN_H \
 	HAVE_GPP_BUILTIN_H \
 	HAVE_GXX_BUILTIN_H \
-	HAVE_STRSTREAM_H \
+	HAVE_IOSTREAM \
 	HAVE_TYPEINFO \
 	HAVE_VALUES_H \
-	USE_STRSTREAM_VSCAN \
-	USE_STRSTREAM_VSCAN_CAST
+	IOSTREAM_NAMESPACE
 do
 	rm -f $2.bak
 	mv $2 $2.bak

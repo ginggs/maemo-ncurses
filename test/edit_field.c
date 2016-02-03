@@ -1,5 +1,32 @@
+/****************************************************************************
+ * Copyright (c) 2003-2006,2008 Free Software Foundation, Inc.              *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, distribute with modifications, sublicense, and/or sell       *
+ * copies of the Software, and to permit persons to whom the Software is    *
+ * furnished to do so, subject to the following conditions:                 *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE ABOVE COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR    *
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR    *
+ * THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               *
+ *                                                                          *
+ * Except as contained in this notice, the name(s) of the above copyright   *
+ * holders shall not be used in advertising or otherwise to promote the     *
+ * sale, use or other dealings in this Software without prior written       *
+ * authorization.                                                           *
+ ****************************************************************************/
 /*
- * $Id: edit_field.c,v 1.7 2003/05/17 23:16:13 tom Exp $
+ * $Id: edit_field.c,v 1.14 2008/10/18 20:40:20 tom Exp $
  *
  * A wrapper for form_driver() which keeps track of the user's editing changes
  * for each field, and makes the result available as a null-terminated string
@@ -13,9 +40,6 @@
 #if USE_LIBFORM
 
 #include <edit_field.h>
-
-#define MY_QUIT		EDIT_FIELD('q')
-#define MY_INS_MODE	EDIT_FIELD('t')
 
 static struct {
     int code;
@@ -78,6 +102,9 @@ static struct {
 	CTRL('S'), REQ_BEG_FIELD, "go to beginning of field"
     },
     {
+	CTRL('T'), MY_EDT_MODE, "toggle O_EDIT mode, clear field status",
+    },
+    {
 	CTRL('U'), REQ_UP_FIELD, "move upward to field"
     },
     {
@@ -102,7 +129,7 @@ static struct {
 	CTRL(']'), MY_INS_MODE, "toggle REQ_INS_MODE/REQ_OVL_MODE",
     },
     {
-	KEY_F(1), EDIT_FIELD('h'), "show this screen",
+	KEY_F(1), MY_HELP, "show this screen",
     },
     {
 	KEY_BACKSPACE, REQ_DEL_PREV, "delete previous character"
@@ -181,7 +208,7 @@ help_edit_field(void)
 
     keypad(help, TRUE);
     keypad(data, TRUE);
-    waddstr(data, "Defined form-traversal keys:\n");
+    waddstr(data, "Defined form edit/traversal keys:\n");
     for (n = 0; n < SIZEOF(commands); ++n) {
 	const char *name;
 #ifdef NCURSES_VERSION
@@ -197,6 +224,32 @@ help_edit_field(void)
 
     do {
 	switch (ch) {
+	case KEY_HOME:
+	    y1 = 0;
+	    break;
+	case KEY_END:
+	    y1 = y2;
+	    break;
+	case KEY_PREVIOUS:
+	case KEY_PPAGE:
+	    if (y1 > 0) {
+		y1 -= high / 2;
+		if (y1 < 0)
+		    y1 = 0;
+	    } else {
+		beep();
+	    }
+	    break;
+	case KEY_NEXT:
+	case KEY_NPAGE:
+	    if (y1 < y2) {
+		y1 += high / 2;
+		if (y1 >= y2)
+		    y1 = y2;
+	    } else {
+		beep();
+	    }
+	    break;
 	case CTRL('P'):
 	case KEY_UP:
 	    if (y1 > 0)
@@ -238,13 +291,19 @@ offset_in_field(FORM * form)
     return form->curcol + form->currow * field->dcols;
 }
 
+static void
+inactive_field(FIELD * f)
+{
+    void *ptr = field_userptr(f);
+    set_field_back(f, (chtype) ptr);
+}
+
 int
 edit_field(FORM * form, int *result)
 {
     int ch = wgetch(form_win(form));
     int status;
     FIELD *before;
-    FIELD *after;
     unsigned n;
     char lengths[80];
     int length;
@@ -258,7 +317,7 @@ edit_field(FORM * form, int *result)
     if (ch <= KEY_MAX) {
 	set_field_back(before, A_REVERSE);
     } else if (ch <= MAX_FORM_COMMAND) {
-	set_field_back(before, A_UNDERLINE);
+	inactive_field(before);
     }
 
     *result = ch;
@@ -386,8 +445,8 @@ edit_field(FORM * form, int *result)
 	set_field_buffer(before, 1, lengths);
     }
 
-    if ((after = current_field(form)) != before)
-	set_field_back(before, A_UNDERLINE);
+    if (current_field(form) != before)
+	inactive_field(before);
     return status;
 }
 #else
