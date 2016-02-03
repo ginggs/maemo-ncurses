@@ -7,7 +7,7 @@
 --                                 B O D Y                                  --
 --                                                                          --
 ------------------------------------------------------------------------------
--- Copyright (c) 2000 Free Software Foundation, Inc.                        --
+-- Copyright (c) 2000-2006,2008 Free Software Foundation, Inc.              --
 --                                                                          --
 -- Permission is hereby granted, free of charge, to any person obtaining a  --
 -- copy of this software and associated documentation files (the            --
@@ -35,7 +35,8 @@
 ------------------------------------------------------------------------------
 --  Author: Eugene V. Melaragno <aldomel@ix.netcom.com> 2000
 --  Version Control
---  $Revision: 1.1 $
+--  $Revision: 1.8 $
+--  $Date: 2008/07/26 18:47:42 $
 --  Binding Version 01.00
 ------------------------------------------------------------------------------
 --  Windows and scrolling tester.
@@ -55,13 +56,11 @@ with Ada.Streams; use Ada.Streams;
 
 procedure ncurses2.acs_and_scroll is
 
-
    Macro_Quit   : constant Key_Code := Character'Pos ('Q') mod 16#20#;
    Macro_Escape : constant Key_Code := Character'Pos ('[') mod 16#20#;
 
    Quit : constant Key_Code := CTRL ('Q');
    Escape : constant Key_Code := CTRL ('[');
-
 
    Botlines : constant Line_Position := 4;
 
@@ -95,7 +94,6 @@ procedure ncurses2.acs_and_scroll is
    function delete_framed (fp : FrameA; showit : Boolean) return FrameA;
 
    use Ada.Streams.Stream_IO;
-
 
    --  A linked list
    --  I  wish there was a standard library linked list. Oh well.
@@ -172,7 +170,6 @@ procedure ncurses2.acs_and_scroll is
       when Curses_Exception => return False;
    end HaveScroll;
 
-
    procedure newwin_legend (curpw : Window) is
 
       package p is new genericPuts (200);
@@ -224,8 +221,8 @@ procedure ncurses2.acs_and_scroll is
          );
 
       buf : Bounded_String;
-      do_keypad : Boolean := HaveKeyPad (curpw);
-      do_scroll : Boolean := HaveScroll (curpw);
+      do_keypad : constant Boolean := HaveKeyPad (curpw);
+      do_scroll : constant Boolean := HaveScroll (curpw);
 
       pos : Natural;
 
@@ -272,7 +269,6 @@ procedure ncurses2.acs_and_scroll is
       Clear_To_End_Of_Line;
    end newwin_legend;
 
-
    procedure transient (curpw : Window; msg : String) is
    begin
       newwin_legend (curpw);
@@ -297,7 +293,6 @@ procedure ncurses2.acs_and_scroll is
 
       Clear_To_End_Of_Line;
    end transient;
-
 
    procedure newwin_report (win : Window := Standard_Window) is
       y : Line_Position;
@@ -331,8 +326,8 @@ procedure ncurses2.acs_and_scroll is
       res : pair;
       i : Line_Position := 0;
       j : Column_Position := 0;
-      si : Line_Position := lri - uli + 1;
-      sj : Column_Position := lrj - ulj + 1;
+      si : constant Line_Position := lri - uli + 1;
+      sj : constant Column_Position := lrj - ulj + 1;
    begin
       res.y := uli;
       res.x := ulj;
@@ -401,7 +396,6 @@ procedure ncurses2.acs_and_scroll is
       end loop;
    end selectcell;
 
-
    function getwindow return Window is
       rwindow : Window;
       ul, lr : pair;
@@ -440,7 +434,6 @@ procedure ncurses2.acs_and_scroll is
       Clear_To_End_Of_Line;
       return rwindow;
    end getwindow;
-
 
    procedure newwin_move (win : Window;
                           dy  : Line_Position;
@@ -499,8 +492,9 @@ begin
       case c is
          when Character'Pos ('c') mod 16#20# => --  Ctrl('c')
             declare
-               neww : FrameA := new Frame'(null, null, False, False,
-                                           Null_Window);
+               neww : constant FrameA := new Frame'(null, null,
+                                                    False, False,
+                                                    Null_Window);
             begin
                neww.wind := getwindow;
                if neww.wind = Null_Window  then
@@ -533,11 +527,11 @@ begin
                current := current.last;
             end if;
          when Character'Pos ('F') mod 16#20#  => --  Ctrl('F')
-            if current /= null and HaveScroll (current.wind) then
+            if current /= null and then HaveScroll (current.wind) then
                Scroll (current.wind, 1);
             end if;
          when Character'Pos ('B') mod 16#20#  => --  Ctrl('B')
-            if current /= null and HaveScroll (current.wind) then
+            if current /= null and then HaveScroll (current.wind) then
             --  The C version of Scroll may return ERR which is ignored
             --  we need to avoid the exception
             --  with the 'and HaveScroll(current.wind)'
@@ -714,7 +708,7 @@ begin
 
    Allow_Scrolling (Mode => True);
 
-   End_Mouse;
+   End_Mouse (Mask2);
    Set_Raw_Mode (SwitchOn => True);
    Erase;
    End_Windows;

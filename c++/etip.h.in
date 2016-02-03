@@ -1,6 +1,6 @@
 // * This makes emacs happy -*-Mode: C++;-*-
 /****************************************************************************
- * Copyright (c) 1998,1999,2000,2001 Free Software Foundation, Inc.         *
+ * Copyright (c) 1998-2007,2008 Free Software Foundation, Inc.              *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -31,7 +31,7 @@
  *   Author: Juergen Pfeifer, 1997                                          *
  ****************************************************************************/
 
-// $Id: etip.h.in,v 1.25 2003/10/25 15:05:58 tom Exp $
+// $Id: etip.h.in,v 1.37 2008/08/30 19:27:32 tom Exp $
 
 #ifndef NCURSES_ETIP_H_incl
 #define NCURSES_ETIP_H_incl 1
@@ -49,8 +49,8 @@
 #define HAVE_GPP_BUILTIN_H 0
 #endif
 
-#ifndef HAVE_STRSTREAM_H
-#define HAVE_STRSTREAM_H 0
+#ifndef HAVE_IOSTREAM
+#define HAVE_IOSTREAM 0
 #endif
 
 #ifndef HAVE_TYPEINFO
@@ -73,12 +73,12 @@
 #define CPP_HAS_PARAM_INIT 0
 #endif
 
-#ifndef USE_STRSTREAM_VSCAN
-#define USE_STRSTREAM_VSCAN 0
+#ifndef CPP_HAS_STATIC_CAST
+#define CPP_HAS_STATIC_CAST 0	// workaround for g++ 2.95.3
 #endif
 
-#ifndef USE_STRSTREAM_VSCAN_CAST
-#define USE_STRSTREAM_VSCAN_CAST 0
+#ifndef IOSTREAM_NAMESPACE
+#define IOSTREAM_NAMESPACE 0
 #endif
 
 #ifdef __GNUG__
@@ -111,9 +111,6 @@
 #  endif
 #elif defined (__SUNPRO_CC)
 #  include <generic.h>
-#  include <string.h>
-#else
-#  include <string.h>
 #endif
 
 #include <ncurses_dll.h>
@@ -135,6 +132,12 @@ extern "C" {
 #define NCURSES_PARAM_INIT(value) /*nothing*/
 #endif
 
+#if CPP_HAS_STATIC_CAST
+#define STATIC_CAST(s) static_cast<s>
+#else
+#define STATIC_CAST(s) (s)
+#endif
+
 // Forward Declarations
 class NCURSES_IMPEXP NCursesPanel;
 class NCURSES_IMPEXP NCursesMenu;
@@ -154,8 +157,23 @@ public:
     : message(msg), errorno (E_SYSTEM_ERROR)
     {};
 
+  NCursesException& operator=(const NCursesException& rhs)
+  {
+    errorno = rhs.errorno;
+    return *this;
+  }
+
+  NCursesException(const NCursesException& rhs)
+    : message(rhs.message), errorno(rhs.errorno)
+  {
+  }
+
   virtual const char *classname() const {
     return "NCursesWindow";
+  }
+
+  virtual ~NCursesException()
+  {
   }
 };
 
@@ -166,7 +184,7 @@ public:
 
   NCursesPanelException (const char *msg, int err) :
     NCursesException (msg, err),
-    p ((NCursesPanel*)0)
+    p (NULL)
     {};
 
   NCursesPanelException (const NCursesPanel* panel,
@@ -178,7 +196,7 @@ public:
 
   NCursesPanelException (int err) :
     NCursesException ("panel library error", err),
-    p ((NCursesPanel*)0)
+    p (NULL)
     {};
 
   NCursesPanelException (const NCursesPanel* panel,
@@ -187,10 +205,27 @@ public:
     p (panel)
     {};
 
+  NCursesPanelException& operator=(const NCursesPanelException& rhs)
+  {
+    if (this != &rhs) {
+      NCursesException::operator=(rhs);
+      p = rhs.p;
+    }
+    return *this;
+  }
+
+  NCursesPanelException(const NCursesPanelException& rhs)
+    : NCursesException(rhs), p(rhs.p)
+  {
+  }
+
   virtual const char *classname() const {
     return "NCursesPanel";
   }
 
+  virtual ~NCursesPanelException()
+  {
+  }
 };
 
 class NCURSES_IMPEXP NCursesMenuException : public NCursesException
@@ -200,7 +235,7 @@ public:
 
   NCursesMenuException (const char *msg, int err) :
     NCursesException (msg, err),
-    m ((NCursesMenu *)0)
+    m (NULL)
     {};
 
   NCursesMenuException (const NCursesMenu* menu,
@@ -212,7 +247,7 @@ public:
 
   NCursesMenuException (int err) :
     NCursesException ("menu library error", err),
-    m ((NCursesMenu *)0)
+    m (NULL)
     {};
 
   NCursesMenuException (const NCursesMenu* menu,
@@ -221,10 +256,27 @@ public:
     m (menu)
     {};
 
+  NCursesMenuException& operator=(const NCursesMenuException& rhs)
+  {
+    if (this != &rhs) {
+      NCursesException::operator=(rhs);
+      m = rhs.m;
+    }
+    return *this;
+  }
+
+  NCursesMenuException(const NCursesMenuException& rhs)
+    : NCursesException(rhs), m(rhs.m)
+  {
+  }
+
   virtual const char *classname() const {
     return "NCursesMenu";
   }
 
+  virtual ~NCursesMenuException()
+  {
+  }
 };
 
 class NCURSES_IMPEXP NCursesFormException : public NCursesException
@@ -234,7 +286,7 @@ public:
 
   NCursesFormException (const char *msg, int err) :
     NCursesException (msg, err),
-    f ((NCursesForm*)0)
+    f (NULL)
     {};
 
   NCursesFormException (const NCursesForm* form,
@@ -246,7 +298,7 @@ public:
 
   NCursesFormException (int err) :
     NCursesException ("form library error", err),
-    f ((NCursesForm*)0)
+    f (NULL)
     {};
 
   NCursesFormException (const NCursesForm* form,
@@ -255,37 +307,72 @@ public:
     f (form)
     {};
 
+  NCursesFormException& operator=(const NCursesFormException& rhs)
+  {
+    if (this != &rhs) {
+      NCursesException::operator=(rhs);
+      f = rhs.f;
+    }
+    return *this;
+  }
+
+  NCursesFormException(const NCursesFormException& rhs)
+    : NCursesException(rhs), f(rhs.f)
+  {
+  }
+
   virtual const char *classname() const {
     return "NCursesForm";
   }
 
+  virtual ~NCursesFormException()
+  {
+  }
 };
 
 #if !((defined(__GNUG__) && defined(__EXCEPTIONS)) || defined(__SUNPRO_CC))
-#  include <iostream.h>
+#  if HAVE_IOSTREAM
+#     include <iostream>
+#     if IOSTREAM_NAMESPACE
+using std::cerr;
+using std::endl;
+#     endif
+#  else
+#     include <iostream.h>
+#  endif
    extern "C" void exit(int);
 #endif
 
 inline void THROW(const NCursesException *e) {
 #if defined(__GNUG__) && defined(__EXCEPTIONS)
 #  if ((__GNUG__ <= 2) && (__GNUC_MINOR__ < 8))
-      (*lib_error_handler)(e?e->classname():"",e?e->message:"");
+      (*lib_error_handler)(e ? e->classname() : "", e ? e->message : "");
 #else
-      throw *e;
+#define CPP_HAS_TRY_CATCH 1
 #endif
 #elif defined(__SUNPRO_CC)
 #  if !defined(__SUNPRO_CC_COMPAT) || (__SUNPRO_CC_COMPAT < 5)
   genericerror(1, ((e != 0) ? (char *)(e->message) : ""));
 #else
-  throw *e;
+#define CPP_HAS_TRY_CATCH 1
 #endif
 #else
   if (e)
     cerr << e->message << endl;
   exit(0);
 #endif
+
+#ifndef CPP_HAS_TRY_CATCH
+#define CPP_HAS_TRY_CATCH 0
+#define NCURSES_CPP_TRY		/* nothing */
+#define NCURSES_CPP_CATCH(e)	if (false)
+#define THROWS(s)		/* nothing */
+#elif CPP_HAS_TRY_CATCH
+  throw *e;
+#define NCURSES_CPP_TRY		try
+#define NCURSES_CPP_CATCH(e)	catch(e)
+#define THROWS(s)		throw(s)
+#endif
 }
 
-#define THROWS(s)
-
-#endif // NCURSES_ETIP_H_incl
+#endif /* NCURSES_ETIP_H_incl */

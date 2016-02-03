@@ -1,6 +1,33 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN">
 <!--
-  $Id: announce.html.in,v 1.53 2004/01/18 01:27:26 tom Exp $
+  $Id: announce.html.in,v 1.70 2008/11/02 01:03:05 tom Exp $
+  ****************************************************************************
+  * Copyright (c) 1998-2006,2008 Free Software Foundation, Inc.              *
+  *                                                                          *
+  * Permission is hereby granted, free of charge, to any person obtaining a  *
+  * copy of this software and associated documentation files (the            *
+  * "Software"), to deal in the Software without restriction, including      *
+  * without limitation the rights to use, copy, modify, merge, publish,      *
+  * distribute, distribute with modifications, sublicense, and/or sell       *
+  * copies of the Software, and to permit persons to whom the Software is    *
+  * furnished to do so, subject to the following conditions:                 *
+  *                                                                          *
+  * The above copyright notice and this permission notice shall be included  *
+  * in all copies or substantial portions of the Software.                   *
+  *                                                                          *
+  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+  * IN NO EVENT SHALL THE ABOVE COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR    *
+  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR    *
+  * THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               *
+  *                                                                          *
+  * Except as contained in this notice, the name(s) of the above copyright   *
+  * holders shall not be used in advertising or otherwise to promote the     *
+  * sale, use or other dealings in this Software without prior written       *
+  * authorization.                                                           *
+  ****************************************************************************
 -->
 <HTML>
 <HEAD>
@@ -19,8 +46,8 @@ and multiple highlights and forms characters and function-key mapping,
 and has all the other SYSV-curses enhancements over BSD curses.<P>
 
 In mid-June 1995, the maintainer of 4.4BSD curses declared that he
-considered 4.4BSD curses obsolete, and is encouraging the keepers of
-Unix releases such as BSD/OS, freeBSD and netBSD to switch over to
+considered 4.4BSD curses obsolete, and encouraged the keepers of
+Unix releases such as BSD/OS, FreeBSD and NetBSD to switch over to
 ncurses.<P>
 
 The ncurses code was developed under GNU/Linux.
@@ -42,198 +69,170 @@ the GNU distribution site
 
 <H1>Release Notes</H1>
 
-This release is designed to be upward compatible from ncurses 5.0 and 5.3;
+This release is designed to be upward compatible from ncurses 5.0 through 5.6;
 very few applications will require recompilation, depending on the platform.
-These are the highlights from the change-log since ncurses 5.3 release.
+These are the highlights from the change-log since ncurses 5.6 release.
 <p>
 Interface changes:
 <ul>
-        <li>add the remaining functions for X/Open curses wide-character
-            support.
-                <ul>
-                <li>pecho_wchar()
-                <li>slk_wset()
-                </ul>
-            These are only available if the library is configured using the
-            <kbd>--enable-widec</kbd> option.
+	<li>generate linkable stubs for some macros:
+	<br>
+	  getattrs
 
-        <li>write <code>getyx()</code> and related 2-return macros in terms of
-            <code>getcury()</code>,
-            <code>getcurx()</code>, etc.
-
-        <li>simplify ifdef for <code>bool</code> declaration in curses.h
-
-        <li>modify ifdef's in curses.h that disabled use of
-            <code>__attribute__()</code> for g++, since recent versions
-            implement the cases which ncurses uses.
-
-        <li>add <code>key_defined()</code> function, to tell which keycode a
-            string is bound to.
 </ul>
 New features and improvements:
 <ul>
         <li>library
-          <ul>
-            <li>implement logic in lib_mouse.c to handle position reports which
-              are generated when XFree86 xterm is initialized with private
-              modes 1002 or 1003. These are returned to the application as the
-              REPORT_MOUSE_POSITION mask, which was not implemented.
-            <li>modify soft-key initialization to use A_REVERSE if A_STANDOUT
-              would not be shown when colors are used, i.e., if ncv#1 is set in
-              the terminfo as is done in "screen".
-            <li>add configure option for FreeBSD sysmouse, --with-sysmouse, and
-              implement library support for that.
-          </ul>
+	<ul>
+		<li>new flavor of the ncurses library provides rudimentary
+		    support for POSIX threads.  Several functions are
+		    reentrant, but most require either a window-level or
+		    screen-level mutex.<br>
+		    (This is <em>API</em>-compatible,
+		     but not <em>ABI</em>-compatible with the normal library).
+
+		<li>add <code>NCURSES_OPAQUE</code> symbol to curses.h, will
+		    use to make structs opaque in selected configurations.
+
+		<li>add <code>NCURSES_EXT_FUNCS</code> and
+		    <code>NCURSES_EXT_COLORS</code> symbols to curses.h to make
+		    it simpler to tell if the extended functions and/or colors
+		    are declared.
+
+		<li>add wresize() to C++ binding 
+
+		<li>eliminate fixed-buffer vsprintf() calls in C++ binding.
+
+		<li>add several functions to C++ binding which wrap C functions
+		    that pass a WINDOW* parameter.
+
+		<li>adapt mouse-handling code from menu library in form-library
+
+		<li>improve tracing for form library, showing created forms,
+		    fields, etc.
+
+		<li>make $NCURSES_NO_PADDING feature work for termcap interface .
+
+		<li>add check to trace-file open, if the given name is a
+		    directory, add ".log" to the name and try again.
+
+		<li>several new manpages:  curs_legacy.3x, curs_memleaks.3x,
+		    curs_opaque.3x and curs_threads.3x
+	</ul>
 
         <li>programs:
+	<ul>
+		<li>modified three test-programs to demonstrate the threading
+		    support in this version: ditto, rain, worm.
 
-          <ul>
-          <li>tack:
+		<li>several new test-programs: demo_panels, dots_mvcur,
+		    inch_wide, inchs, key_name, key_names, savescreen,
+		    savescreen.sh test_arrays, test_get_wstr, test_getstr,
+		    test_instr, test_inwstr and test_opaque.
 
-            <ul>
-            <li>allow it to run from fallback terminfo data.
-            <li>reset colors after each color test, correct a place
-                where <code>exit_standout_mode</code> was used instead of
-                <code>exit_attribute_mode</code>.
-            <li>improve <code>bce</code> test by making it set colors other
-                than black on white.
-            </ul>
+		<li>add <code>adacurses-config</code> to the Ada95 install.
 
-          <li>tic:
+		<li>modify tic <code>-f</code> option to format spaces as
+		    <code>\s</code> to prevent them from being lost when that
+		    is read back in unformatted strings.
 
-            <ul>
-            <li>handle a case where an entry has no
-                description, and capabilities begin on the same line as the entry
-                name.
-            <li>allow a terminfo entry with a leading 2-character name.
-            <li>improved warnings when suppressing items to fit in termcap's
-                1023-byte limit.
-            <li>add check for multiple "tc=" clauses in a termcap.
-            <li>correct logic for resolving "use=" clauses
-                allow infocmp and tic to show cancelled capabilities.
-            <li>check for incomplete line-drawing character mapping.
-            <li>check for missing/empty/illegal terminfo name.
-            </ul>
+		<li>The <code>tack</code> program is now distributed separately
+		    from ncurses.
+	</ul>
 
-          <li>tput:
-            <ul>
-            <li>modify tput to use the same parameter analysis as tparm() does,
-              to provide for user-defined strings, e.g., for xterm title, a
-              corresponding capability might be
-                title=\E]2;%p1%s^G,
-            </ul>
-
-          <li>tset:
-
-            <ul>
-            <li>use the system's default values for CKILL and other default
-                control characters.
-            <li>correct interchanged defaults for kill and interrupt
-                characters, which caused it to report unnecessarily.
-            </ul>
-
-          </ul>
+	<li>terminal database
+	<ul>
+	    <li>added entries:
+		<ul>
+		<li><code>Eterm-256color</code>,
+		    <code>Eterm-88color</code> and
+		    <code>rxvt-88color</code>
+		<li><code>aterm</code>
+		<li><code>konsole-256color</code>
+		<li><code>mrxvt</code>
+		<li><code>screen.mlterm</code>
+		<li><code>screen.rxvt</code>
+		<li><code>teraterm4.59</code> is now the primary primary
+		    teraterm entry, renamed original to
+		    <code>teraterm2.3</code>
+		<li><code>9term</code> terminal
+		<li>Newbury Data entries
+		</ul>
+	    <li>updated/improved entries:
+		<ul>
+	        <li><code>gnome</code> to version 2.22.3
+		<li><code>h19</code>, <code>z100</code>
+		<li><code>konsole</code> to version 1.6.6
+		<li><code>mlterm</code>, <code>mlterm+pcfkeys</code>
+		<li><code>xterm</code>, and building-blocks for function-keys
+		    to <a href="http://invisible-island.net/xterm/xterm.log.html#xterm_230">xterm patch #230</a>.
+		</ul>
+	</ul>
 </ul>
 Major bug fixes:
 <ul>
-        <li>prevent recursion in wgetch() via wgetnstr() if the connection
-          cannot be switched between cooked/raw modes because it is not a TTY.
+	<li>add logic to tic for cancelling strings in user-defined
+	    capabilities
+	    (this is <em>needed</em> for
+	     current <code>konsole</code> terminfo entry).
 
-        <li>correct a case in _nc_remove_string(), used by
-          <code>define_key()</code>, to avoid infinite loop if the given string
-          happens to be a substring of other strings which are assigned to keys.
+	<li>modify <code>mk-1st.awk</code> so the generated makefile rules for
+	    linking or installing shared libraries do not first remove the
+	    library, in case it is in use, e.g., <code>libncurses.so</code> by
+	    <code>/bin/sh</code>.
 
-        <li>modify logic of acsc to use the original character if no mapping is
-          defined, rather than a null.
+	<li>correct check for notimeout() in wgetch().
 
-        <li>several improvements for handling multi-cell display of wide
-            characters.
-          <ul>
-          <li>modify setcchar() to allow converting control characters to complex
-            characters.
-          <li>correct handling of multibyte characters in waddch_literal() which
-            force wrapping because they are started too late on the line.
-          <li>modify setcchar() to allow for wchar_t input strings that have
-            more than one spacing character.
-          </ul>
+	<li>fix a sign-extension bug in infocmp's repair_acsc() function.
 
-	<li>other fixes for wide-character support:
-	  <ul>
-          <li>rewrote lib_acs.c to allow PutAttrChar() to decide how to render
-            alternate-characters, i.e., to work with Linux console and UTF-8
-            locale.
-          <li>implement a workaround so that line-drawing works with screen's
-            crippled UTF-8 support (tested with 3.9.13).  This only works with
-	    the wide-character support (--enable-widec); the normal library
-	    will simply suppress line-drawing when running in a UTF-8 locale in
-	    screen.
-          <li>corrections to lib_get_wstr.c:
-            <ul>
-            <li>null-terminate buffer passed to setcchar(), which occasionally
-              failed.
-            <li>map special characters such as erase- and kill-characters into
-              key-codes so those will work as expected even if they are not
-              mentioned in the terminfo.
-            </ul>
-	  </ul>
+	<li>change winnstr() to stop at the end of the line.
 
-        <li>modify <code>setupterm()</code> to check if the terminfo and
-          terminal-modes have already been read.  This ensures that it does not
-          reinvoke <code>def_prog_mode()</code> when an application calls more
-          than one function, such as <code>tgetent()</code> and
-          <code>initscr()</code>.
+	<li>make Ada95 demo_panels() example work.
 
-        <li>fix form_driver() cases for REQ_CLR_EOF, REQ_CLR_EOL, REQ_DEL_CHAR,
-          REQ_DEL_PREV and REQ_NEW_LINE, which did not ensure the cursor was at
-          the editing position before making modifications.
+	<li>fix for adding a non-spacing character at the beginning of a line.
 
-        <li>correct <code>keybound()</code>, which reported definitions in the
-          wrong table, i.e., the list of definitions which are disabled by
-          <code>keyok()</code>.
+	<li>fill in extended-color pair to make colors work
+	    for wide-characters using extended-colors.
 
-        <li>fixes related to safe_sprintf.c:
-          <ul>
-          <li>correct an allocation size in safe_sprintf.c for the "*" format
-          code.
-          <li>correct safe_sprintf.c to not return a null pointer if the format
-            happens to be an empty string.
-          <li>make return value from _nc_printf_string() consistent. Before,
-            depending on whether --enable-safe-sprintf was used, it might not
-            be cached for reallocating.
-          </ul>
+	<li>improve refresh of window on top of multi-column characters,
+	    taking into account split characters on left/right window
+	    boundaries.
 
-        <li>other low-level improvements to the optimization code include:
-          <ul>
-          <li>if the output is a socket or other non-tty device, use 1
-            millisecond
-            for the cost in mvcur; previously it was 9 milliseconds because the
-            baudrate was not known.
-          <li>modify lib_getch.c to avoid recursion via wgetnstr() when the
-            input
-            is not a tty and consequently mode-changes do not work.
-          <li>fix several places in tack/pad.c which tested and used the
-            parameter- and parameterless strings inconsistently.
-          <li>change several tputs() calls in scrolling code to use putp(), to
-            enable padding which may be needed for some terminals.
-          <li>improve mvcur() by checking if it is safe to move when video
-            attributes are set (msgr), and if not, reset/restore attributes
-            within that function rather than doing it separately in the GoTo()
-            function in tty_update.c.
-	  <li>use tputs() rather than putp() in a few cases in tty_update.c
-	    since the corresponding delays are proportional to the number of
-	    lines affected: repeat_char, clr_eos, change_scroll_region.
-          </ul>
+	<li>modify <code>win_wchnstr()</code> to ensure that only a base cell
+	    is returned for each multi-column character.
 
-        <li>correct line/column reference in adjust_window(), needed to make
-          special windows such as curscr track properly when resizing.
+	<li>improve <code>waddch()</code> and <code>winsch()</code> handling of
+	    EILSEQ from <code>mbrtowc()</code> by using <code>unctrl()</code>
+	    to display illegal bytes rather than trying to append further bytes
+	    to make up a valid sequence.
 
-        <li>fix a potential recursion between napms() and _nc_timed_wait()
+	<li>restore <code>curs_set()</code> state after
+	    <code>endwin()</code>/<code>refresh()</code>
 
-        <li>rewrote lib_insch.c, combining it with lib_insstr.c so both handle
-          tab and other control characters consistently.
+	<li>modify <code>keyname()</code> to use "^X" form only if
+	    <code>meta()</code> has been called, or if <code>keyname()</code>
+	    is called without initializing curses, e.g., via
+	    <code>initscr()</code> or <code>newterm()</code>.
 
-        <li>do not try to open gpm mouse driver if standard output is not a
-          tty; the gpm library does not make this check.
+	<li>modify <code>unctrl()</code> to check codes in 128-255 range versus
+	    <code>isprint()</code>.
+	    If they are not printable, and locale was set, use a "M-" or "~"
+	    sequence.
+
+	<li>improve <code>resizeterm()</code> by moving ripped-off lines, and
+	    repainting the soft-keys.
+
+	<li>modify form library to accept control characters such as newline
+	    in set_field_buffer(), which is compatible with Solaris.
+
+	<li>use <code>NCURSES_MOUSE_MASK()</code> in definition of
+	    <code>BUTTON_RELEASE()</code>, etc., to make those work properly
+	    with the <code>--enable-ext-mouse</code> configuration
+
+	<li>correct some functions in Ada95 binding which were using return
+	    value from C where none was returned.
+
+	<li>reviewed/fixed issues reported by Coverity and Klocwork tools.
 </ul>
 
 Portability:
@@ -242,98 +241,117 @@ Portability:
           <ul>
           <li>new options:
             <dl>
-            <dt>--with-abi-version option.
-	      <dd>addresses platforms where packagers have diverged from
-		  ncurses ABI numbering.
-            <dt>--with-manpage-format=catonly
-              <dd>addresses
-                  behavior of BSDI, allow install of man+cat files on NetBSD,
-                  whose behavior has diverged by requiring both to be present.
-            <dt>--with-manpage-aliases
-              <dd>extends
-                  "--with-manpage-aliases" to provide the option of generating
-                  ".so" files rather than symbolic links for manpage aliases.
-            <dt>--with-rel-version
-              <dd>workaround to force
-		  libtool on Darwin generate the "same" library names as with
-		  the "--with-shared" option.  The Darwin ld program does not
-		  work well with a zero as the minor-version value.
-            <dt>--with-trace
-              <dd>simplifies defining TRACE to incorporate trace() in libraries.
-            </dl>
-  
-          <li>fixes/improvements for cross-compiling:
-  
-            <ul>
-            <li>allow BUILD_CC and related configure script variables to be
-              overridden from the environment.
-            <li>use AC_CHECK_TOOL to get proper values for AR and LD for cross
-              compiling.
-	    <li>use <code>$cross_compiling</code> variable in configure script
-	      rather than comparing <code>$host_alias</code> and
-	      <code>$target</code> alias, since "host" is traditionally misused
-	      in autoconf to refer to the target platform.
-            <li>modify run_tic.in to avoid using wrong shared libraries when
-              cross-compiling.
-            </ul>
-  
-          <li>fixes for Mac OS X:
-            <ul>
-            <li>fix a redefinition of <code>$RANLIB</code> in the configure
-              script when libtool is used.
-            <li>modify MKlib_gen.sh to avoid passing "#" tokens through the C
-              preprocessor.  This works around Mac OS X's preprocessor, which
-              insists on adding a blank on each side of the token.
-            </ul>
-  
-          <li>workarounds for broken tools:
-            <ul>
-            <li>add configure check for wchar_t and wint_t types, rather than
-              rely on preprocessor definitions.  Also work around for gcc
-	      <code>fixinclude</code> bug which creates a shadow copy of
-	      curses.h if it sees these symbols apparently typedef'd.
-	    <li>modify configure script to omit -Winline for gcc 3.3, since
-	      that feature is broken.
-            <li>several script fixes to work around the ironically named
-              <em>POSIXLY_CORRECT</em> feature of GNU sed 4.0.
-	    <li>modify configure script to avoid using "head -1", which does
-	      not work if POSIXLY_CORRECT (sic) is set.
-            <li>update configure script to reflect fix for
-              AC_PROG_GCC_TRADITIONAL, which is broken in autoconf 2.5x for Mac
-              OS X 10.2.3.
-            <li>repair check for missing C++ compiler, which is broken in
-              autoconf 2.5x by hardcoding it to g++.
-            </ul>
-  
-          <li>corrected ifdef's relating to configure check for wchar_t, etc.
-          <li>remove configure script check to allow -Wconversion for older
-            versions of gcc
-	  <li>modify configure script to accommodate libtool 1.5, as well as
-	    add an parameter to the "--with-libtool" option which can specify
-	    the pathname of libtool.
-          <li>change several sed scripts to avoid using "\+" since it is not a
-	    BRE (basic regular expression).  One instance caused terminfo.5 to
-	    be misformatted on FreeBSD.
-          <li>use '%' as sed substitute delimiter in run_tic script to avoid
-            problems with pathname delimiters such as ':' and '@'.
-          <li>add -D_XOPEN_SOURCE=500 if needed when configuring with
-	    "--enable-widec", to get <code>mbstate_t</code> declaration on HPUX
-	    11.11.
-          </ul>
 
-        <li>library:
-          <ul>
-          <li>adjust include-options in CF_ETIP_DEFINES to avoid missing
-            ncurses_dll.h, fixing special definitions that may be needed for
-            etip.h.
-          <li>modify CF_LIB_SUFFIX for Itanium releases of HP-UX, which use a
-            ".so" suffix.
-          <li>improve ifdef's to guard against redefinition of wchar_t and wint_t
-            in curses.h.
-          <li>remove an #undef for KEY_EVENT from curses.tail used in the
-            experimental NCURSES_WGETCH_EVENTS feature.  The #undef confuses
-            Debian <code>dpkg</code>'s build script.
-          </ul>
+	    <dt>--disable-big-strings
+	    <dd>control whether static string tables are generated as single
+	        large strings (to improve startup performance), or as array
+		of individual strings.
+
+	    <dt>--disable-relink
+	    <dd>control whether shared libraries are relinked (during install)
+		when rpath is enabled.
+
+	    <dt>--disable-tic-depends
+	    <dd>make explicit whether tic library depends on ncurses/ncursesw
+	        library.
+
+	    <dt>--enable-mixed-case
+	    <dd>override the configure script's check if the filesystem
+		supports mixed-case filenames.
+	        This allows one to control how the terminal database
+		maps to the filesystem.
+		For filesystems that do not support mixed-case, the library
+		uses generate 2-character (hexadecimal) codes for the
+		lower-level of the filesystem terminfo database
+
+	    <dt>--enable-reentrant
+	    <dd>builds a different flavor of the ncurses library (ncursest)
+	        which improves reentrant use of the
+		library by reducing global and static variables
+	        (see the "--with-pthread" option for the threaded support).
+
+	    <dt>--enable-weak-symbols
+	    <dd>use weak-symbols for linking to the POSIX thread library,
+	        and use the same soname for the ncurses shared library
+		as the normal library (caveat: the ABI is for the threaded
+		library, which makes global data accessed via functions).
+
+	    <dt>--with-pthread
+	    <dd>build with the POSIX thread library (tested with AIX,
+	        Linux, FreeBSD, OpenBSD, HPUX, IRIX64, Solaris, Tru64).
+
+	    <dt>--with-ticlib
+	    <dd>build/install the tic-support functions in a separate library
+
+            </dl>
+
+	  <li>improved options:
+	    <dl>
+
+	    <dt>--enable-ext-colors
+	    <dd>requires the wide-character configuration.
+
+	    <dt>--with-chtype
+	    <dd>ignore option value "unsigned" is always added to
+		the type in curses.h; do the same for --with-mmask-t.
+
+	    <dt>--with-dmalloc
+	    <dd>build-fix for redefinition of <code>strndup</code>.
+
+	    <dt>--with-hashed-db
+	    <dd>accepts a parameter which is the install-prefix of a given
+	        Berkeley Database.
+
+	    <dt>--with-hashed-db
+	    <dd>the $LIBS environment variable overrides the search for the db
+		library.
+
+	    <dt>--without-hashed-db
+	    <dd>assumed when "--disable-database" is used.
+
+	    </dl>
+
+	</ul>
+
+	<li>other configure/build issues:
+	  <ul>
+	  <li>build-fixes for LynxOS
+	  <li>modify shared-library rules to allow FreeBSD 3.x to use rpath.
+	  <li>build-fix for FreeBSD "contemporary" TTY interface.
+	  <li>build-fixes for AIX with libtool.
+	  <li>build-fixes for Darwin and libtool.
+	  <li>modify BeOS-specific ifdef's to build on Haiku.
+	  <li>corrected gcc options for building shared libraries on Solaris
+	      and IRIX64.
+	  <li>change shared-library configuration for OpenBSD, make rpath work.
+	  <li>build-fixes for using libutf8, e.g., on OpenBSD 3.7
+	  <li>add "-e" option in ncurses/Makefile.in when generating source-files
+	      to force earlier exit if the build environment fails unexpectedly.
+	  <li>add support for shared libraries for QNX.
+	  <li>change delimiter in <code>MKlib_gen.sh</code> from '%' to '@', to
+	      avoid substitution by IBM xlc to '#' as part of its extensions to
+	      digraphs.
+	</ul>
+
+	<li>library:
+	<ul>
+	<li>rewrite wrapper for <code>wcrtomb()</code>, making it work on
+	    Solaris.  This is used in the form library to determine the length
+	    of the buffer needed by <code>field_buffer</code>.
+	<li>add/use configure script macro CF_SIG_ATOMIC_T, use the corresponding
+	    type for data manipulated by signal handlers.
+	<li>set locale in misc/ncurses-config.in since it uses a range
+	<li>disable GPM mouse support when $TERM does not happen to contain
+	    "linux", since Gpm_Open() no longer limits its assertion to terminals
+	    that it might handle, e.g., within "screen" in xterm.
+	<li>reset mouse file-descriptor when unloading GPM library.
+	</ul>
+
+	<li>test programs:
+	<ul>
+	<li>update test programs to build/work with various UNIX curses for
+	    comparisons.
+	</ul>
 </ul>
 
 <H1>Features of Ncurses</H1>
@@ -362,14 +380,15 @@ The ncurses package also has many useful extensions over SVr4:
 <UL>
 <LI>The API is 8-bit clean and base-level conformant with the X/OPEN curses
 specification, XSI curses (that is, it implements all BASE level features,
-but not all EXTENDED features).  Most EXTENDED-level features not directly
-concerned with wide-character support are implemented, including many
-function calls not supported under SVr4 curses (but portability of all
+and most EXTENDED features).
+It includes many function calls not supported under SVr4 curses
+(but portability of all
 calls is documented so you can use the SVr4 subset only).
 <LI>Unlike SVr3 curses, ncurses can write to the rightmost-bottommost corner
 of the screen if your terminal has an insert-character capability.
 <LI>Ada95 and C++ bindings.
-<LI>Support for mouse event reporting with X Window xterm and OS/2 console windows.
+<LI>Support for mouse event reporting with X Window xterm
+and FreeBSD and OS/2 console windows.
 <LI>Extended mouse support via Alessandro Rubini's gpm package.
 <LI>The function <CODE>wresize()</CODE> allows you to resize windows, preserving
 their data.
@@ -381,7 +400,9 @@ and <CODE>define_key()</CODE> allow
 you to better control the use of function keys,
 e.g., disabling the ncurses KEY_MOUSE,
 or by defining more than one control sequence to map to a given key code.
-<LI>Support for 16-color terminals, such as aixterm and XFree86 xterm.
+<LI>Support for 256-color terminals, such as modern xterm, when configured
+using the <code>--enable-ext-colors</code> option.
+<LI>Support for 16-color terminals, such as aixterm and modern xterm.
 <LI>Better cursor-movement optimization.  The package now features a
 cursor-local-movement computation more efficient than either BSD's
 or System V's.
@@ -484,21 +505,18 @@ for similar applications on GNU/Linux.
 <br>
 <DT> pinfo
 <DD> Lynx-like info browser.
-<A HREF="http://dione.ids.pl/~pborys/software/pinfo/">http://dione.ids.pl/~pborys/software/pinfo/</A>
+<A HREF="https://alioth.debian.org/projects/pinfo/">https://alioth.debian.org/projects/pinfo/</A>
 <DT> tin
 <DD> newsreader, supporting color, MIME
 <A HREF="http://www.tin.org/">http://www.tin.org/</A>
-<DT> vh-1.6
-<DD> Volks-Hypertext browser for the Jargon File
-<br>
-<A HREF="http://www.debian.org/Packages/unstable/text/vh.html">http://www.debian.org/Packages/unstable/text/vh.html</A>
 </DL>
 as well as some that use ncurses for the terminfo support alone:
 <DL>
 <DT> minicom
 <DD> terminal emulator
 <br>
-<A HREF="http://www.netsonic.fi/~walker/minicom.html">http://www.netsonic.fi/~walker/minicom.html</A>
+<A HREF="http://alioth.debian.org/projects/minicom/">
+http://alioth.debian.org/projects/minicom/</A>
 <DT> vile
 <DD> vi-like-emacs
 <br>
@@ -548,10 +566,11 @@ on them, please join the ncurses list.
 <H2>Other Related Resources</H2>
 
 The distribution provides a newer version of the terminfo-format
-terminal description file maintained by
+terminal description file once maintained by
 <A HREF="http://www.catb.org/~esr/terminfo/">Eric Raymond</A>&nbsp;.
 Unlike the older version, the termcap and terminfo data are provided
-in the same file.<P>
+in the same file, and provides several user-definable extensions
+beyond the X/Open specification.<P>
 
 You can find lots of information on terminal-related topics
 not covered in the terminfo file at

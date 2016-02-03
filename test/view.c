@@ -1,3 +1,30 @@
+/****************************************************************************
+ * Copyright (c) 1998-2007,2008 Free Software Foundation, Inc.              *
+ *                                                                          *
+ * Permission is hereby granted, free of charge, to any person obtaining a  *
+ * copy of this software and associated documentation files (the            *
+ * "Software"), to deal in the Software without restriction, including      *
+ * without limitation the rights to use, copy, modify, merge, publish,      *
+ * distribute, distribute with modifications, sublicense, and/or sell       *
+ * copies of the Software, and to permit persons to whom the Software is    *
+ * furnished to do so, subject to the following conditions:                 *
+ *                                                                          *
+ * The above copyright notice and this permission notice shall be included  *
+ * in all copies or substantial portions of the Software.                   *
+ *                                                                          *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  *
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF               *
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.   *
+ * IN NO EVENT SHALL THE ABOVE COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,   *
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR    *
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR    *
+ * THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               *
+ *                                                                          *
+ * Except as contained in this notice, the name(s) of the above copyright   *
+ * holders shall not be used in advertising or otherwise to promote the     *
+ * sale, use or other dealings in this Software without prior written       *
+ * authorization.                                                           *
+ ****************************************************************************/
 /*
  * view.c -- a silly little viewer program
  *
@@ -23,12 +50,12 @@
  * scroll operation worked, and the refresh() code only had to do a
  * partial repaint.
  *
- * $Id: view.c,v 1.58 2004/03/13 19:13:48 tom Exp $
+ * $Id: view.c,v 1.69 2008/09/06 22:10:50 tom Exp $
  */
 
-#include <time.h>
-
 #include <test.priv.h>
+
+#include <time.h>
 
 #undef CTRL			/* conflict on AIX 5.2 with <sys/ioctl.h> */
 
@@ -52,6 +79,23 @@
 #include <sys/ptem.h>
 #endif
 
+#if USE_WIDEC_SUPPORT
+#if HAVE_MBTOWC && HAVE_MBLEN
+#define reset_mbytes(state) mblen(NULL, 0), mbtowc(NULL, NULL, 0)
+#define count_mbytes(buffer,length,state) mblen(buffer,length)
+#define check_mbytes(wch,buffer,length,state) \
+	(int) mbtowc(&wch, buffer, length)
+#define state_unused
+#elif HAVE_MBRTOWC && HAVE_MBRLEN
+#define reset_mbytes(state) init_mb(state)
+#define count_mbytes(buffer,length,state) mbrlen(buffer,length,&state)
+#define check_mbytes(wch,buffer,length,state) \
+	(int) mbrtowc(&wch, buffer, length, &state)
+#else
+make an error
+#endif
+#endif				/* USE_WIDEC_SUPPORT */
+
 static RETSIGTYPE finish(int sig) GCC_NORETURN;
 static void show_all(const char *tag);
 
@@ -71,8 +115,9 @@ static int shift = 0;
 static bool try_color = FALSE;
 
 static char *fname;
-static NCURSES_CH_T **my_lines;
+static NCURSES_CH_T **vec_lines;
 static NCURSES_CH_T **lptr;
+static int num_lines;
 
 static void
 usage(void)
@@ -130,17 +175,19 @@ ch_dup(char *src)
     wchar_t wstr[CCHARW_MAX + 1];
     wchar_t wch;
     int l = 0;
-    mbstate_t state;
     size_t rc;
     int width;
+#ifndef state_unused
+    mbstate_t state;
 #endif
+#endif /* USE_WIDEC_SUPPORT */
 
 #if USE_WIDEC_SUPPORT
-    memset(&state, 0, sizeof(state));
+    reset_mbytes(state);
 #endif
     for (j = k = 0; j < len; j++) {
 #if USE_WIDEC_SUPPORT
-	rc = mbrtowc(&wch, src + j, len - j, &state);
+	rc = check_mbytes(wch, src + j, len - j, state);
 	if (rc == (size_t) -1 || rc == (size_t) -2)
 	    break;
 	j += rc - 1;
@@ -166,7 +213,8 @@ ch_dup(char *src)
 	if (setcchar(dst + k, wstr, 0, 0, NULL) == OK)
 	    ++k;
     }
-    setcchar(dst + k, L"", 0, 0, NULL);
+    wstr[0] = L'\0';
+    setcchar(dst + k, wstr, 0, 0, NULL);
 #else
     dst[k] = 0;
 #endif
@@ -182,7 +230,6 @@ main(int argc, char *argv[])
     int i;
     int my_delay = 0;
     NCURSES_CH_T **olptr;
-    int length = 0;
     int value = 0;
     bool done = FALSE;
     bool got_number = FALSE;
@@ -201,18 +248,17 @@ main(int argc, char *argv[])
     (void) signal(SIGINT, finish);	/* arrange interrupts to terminate */
 #endif
 
-    while ((i = getopt(argc, argv, "cin:rtT:")) != EOF) {
+    while ((i = getopt(argc, argv, "cin:rtT:")) != -1) {
 	switch (i) {
 	case 'c':
 	    try_color = TRUE;
 	    break;
 	case 'i':
-	    signal(SIGINT, SIG_IGN);
-	    signal(SIGQUIT, SIG_IGN);
-	    signal(SIGTERM, SIG_IGN);
+	    CATCHALL(SIG_IGN);
 	    break;
 	case 'n':
-	    if ((MAXLINES = atoi(optarg)) < 1)
+	    if ((MAXLINES = atoi(optarg)) < 1 ||
+		(MAXLINES + 2) <= 1)
 		usage();
 	    break;
 #if CAN_RESIZE
@@ -222,7 +268,7 @@ main(int argc, char *argv[])
 #endif
 #ifdef TRACE
 	case 'T':
-	    trace(atoi(optarg));
+	    trace((unsigned) atoi(optarg));
 	    break;
 	case 't':
 	    trace(TRACE_CALLS);
@@ -235,7 +281,7 @@ main(int argc, char *argv[])
     if (optind + 1 != argc)
 	usage();
 
-    if ((my_lines = typeMalloc(NCURSES_CH_T *, MAXLINES + 2)) == 0)
+    if ((vec_lines = typeMalloc(NCURSES_CH_T *, MAXLINES + 2)) == 0)
 	usage();
 
     fname = argv[optind];
@@ -249,7 +295,7 @@ main(int argc, char *argv[])
 #endif
 
     /* slurp the file */
-    for (lptr = &my_lines[0]; (lptr - my_lines) < MAXLINES; lptr++) {
+    for (lptr = &vec_lines[0]; (lptr - vec_lines) < MAXLINES; lptr++) {
 	char temp[BUFSIZ], *s, *d;
 	int col;
 
@@ -282,7 +328,7 @@ main(int argc, char *argv[])
 	*lptr = ch_dup(temp);
     }
     (void) fclose(fp);
-    length = lptr - my_lines;
+    num_lines = lptr - vec_lines;
 
     (void) initscr();		/* initialize the curses library */
     keypad(stdscr, TRUE);	/* enable keyboard mapping */
@@ -302,7 +348,7 @@ main(int argc, char *argv[])
 	}
     }
 
-    lptr = my_lines;
+    lptr = vec_lines;
     while (!done) {
 	int n, c;
 
@@ -325,7 +371,7 @@ main(int argc, char *argv[])
 		    mvprintw(0, 0, "Count: ");
 		    clrtoeol();
 		}
-		addch(c);
+		addch(UChar(c));
 		value = 10 * value + (c - '0');
 		got_number = TRUE;
 	    } else
@@ -344,35 +390,35 @@ main(int argc, char *argv[])
 	case 'n':
 	    olptr = lptr;
 	    for (i = 0; i < n; i++)
-		if ((lptr - my_lines) < (length - LINES + 1))
+		if ((lptr - vec_lines) < (num_lines - LINES + 1))
 		    lptr++;
 		else
 		    break;
-	    wscrl(stdscr, lptr - olptr);
+	    scrl(lptr - olptr);
 	    break;
 
 	case KEY_UP:
 	case 'p':
 	    olptr = lptr;
 	    for (i = 0; i < n; i++)
-		if (lptr > my_lines)
+		if (lptr > vec_lines)
 		    lptr--;
 		else
 		    break;
-	    wscrl(stdscr, lptr - olptr);
+	    scrl(lptr - olptr);
 	    break;
 
 	case 'h':
 	case KEY_HOME:
-	    lptr = my_lines;
+	    lptr = vec_lines;
 	    break;
 
 	case 'e':
 	case KEY_END:
-	    if (length > LINES)
-		lptr = my_lines + length - LINES + 1;
+	    if (num_lines > LINES)
+		lptr = vec_lines + num_lines - LINES + 1;
 	    else
-		lptr = my_lines;
+		lptr = vec_lines;
 	    break;
 
 	case 'r':
@@ -430,6 +476,15 @@ static RETSIGTYPE
 finish(int sig)
 {
     endwin();
+#if NO_LEAKS
+    if (vec_lines != 0) {
+	int n;
+	for (n = 0; n < num_lines; ++n) {
+	    free(vec_lines[n]);
+	}
+	free(vec_lines);
+    }
+#endif
     ExitProgram(sig != 0 ? EXIT_FAILURE : EXIT_SUCCESS);
 }
 
@@ -473,10 +528,12 @@ show_all(const char *tag)
     time_t this_time;
 
 #if CAN_RESIZE
-    sprintf(temp, "%s (%3dx%3d) col %d ", tag, LINES, COLS, shift);
+    sprintf(temp, "%.20s (%3dx%3d) col %d ", tag, LINES, COLS, shift);
     i = strlen(temp);
-    sprintf(temp + i, "view %.*s", (int) (sizeof(temp) - 7 - i), fname);
+    if ((i + 7) < (int) sizeof(temp))
+	sprintf(temp + i, "view %.*s", (int) (sizeof(temp) - 7 - i), fname);
 #else
+    (void) tag;
     sprintf(temp, "view %.*s", (int) sizeof(temp) - 7, fname);
 #endif
     move(0, 0);
@@ -493,7 +550,7 @@ show_all(const char *tag)
     scrollok(stdscr, FALSE);	/* prevent screen from moving */
     for (i = 1; i < LINES; i++) {
 	move(i, 0);
-	printw("%3ld:", (long) (lptr + i - my_lines));
+	printw("%3ld:", (long) (lptr + i - vec_lines));
 	clrtoeol();
 	if ((s = lptr[i - 1]) != 0) {
 	    int len = ch_len(s);

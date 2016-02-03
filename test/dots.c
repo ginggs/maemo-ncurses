@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 1999-2001,2002 Free Software Foundation, Inc.              *
+ * Copyright (c) 1999-2007,2008 Free Software Foundation, Inc.              *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
  * copy of this software and associated documentation files (the            *
@@ -29,20 +29,25 @@
 /*
  * Author: Thomas E. Dickey <dickey@clark.net> 1999
  *
- * $Id: dots.c,v 1.8 2002/04/06 21:33:42 tom Exp $
+ * $Id: dots.c,v 1.17 2008/02/09 18:08:50 tom Exp $
  *
  * A simple demo of the terminfo interface.
  */
-#include <time.h>
-
+#define USE_TINFO
 #include <test.priv.h>
+
+#if HAVE_SETUPTERM
+
+#include <time.h>
 
 #define valid(s) ((s != 0) && s != (char *)-1)
 
 static bool interrupted = FALSE;
+static long total_chars = 0;
+static time_t started;
 
 static int
-outc(int c)
+outc(TPUTS_ARG c)
 {
     if (interrupted) {
 	char tmp = c;
@@ -71,14 +76,16 @@ cleanup(void)
 	outs(orig_pair);
     outs(clear_screen);
     outs(cursor_normal);
+
+    printf("\n\n%ld total chars, rate %.2f/sec\n",
+	   total_chars,
+	   ((double) (total_chars) / (time((time_t *) 0) - started)));
 }
 
 static void
 onsig(int n GCC_UNUSED)
 {
     interrupted = TRUE;
-    cleanup();
-    ExitProgram(EXIT_FAILURE);
 }
 
 static float
@@ -93,15 +100,13 @@ main(
 	int argc GCC_UNUSED,
 	char *argv[]GCC_UNUSED)
 {
-    int x, y, z, j, p;
+    int x, y, z, p;
     float r;
     float c;
 
-    for (j = SIGHUP; j <= SIGTERM; j++)
-	if (signal(j, SIG_IGN) != SIG_IGN)
-	    signal(j, onsig);
+    CATCHALL(onsig);
 
-    srand(time(0));
+    srand((unsigned) time(0));
     setupterm((char *) 0, 1, (int *) 0);
     outs(clear_screen);
     outs(cursor_invisible);
@@ -114,8 +119,9 @@ main(
 
     r = (float) (lines - 4);
     c = (float) (columns - 4);
+    started = time((time_t *) 0);
 
-    for (;;) {
+    while (!interrupted) {
 	x = (int) (c * ranf()) + 2;
 	y = (int) (r * ranf()) + 2;
 	p = (ranf() > 0.9) ? '*' : ' ';
@@ -127,14 +133,30 @@ main(
 		tputs(tparm2(set_a_foreground, z), 1, outc);
 	    } else {
 		tputs(tparm2(set_a_background, z), 1, outc);
+		napms(1);
 	    }
 	} else if (valid(exit_attribute_mode)
 		   && valid(enter_reverse_mode)) {
-	    if (ranf() <= 0.01)
-		outs((ranf() > 0.6) ? enter_reverse_mode :
-		     exit_attribute_mode);
+	    if (ranf() <= 0.01) {
+		outs((ranf() > 0.6)
+		     ? enter_reverse_mode
+		     : exit_attribute_mode);
+		napms(1);
+	    }
 	}
 	outc(p);
 	fflush(stdout);
+	++total_chars;
     }
+    cleanup();
+    ExitProgram(EXIT_SUCCESS);
 }
+#else
+int
+main(int argc GCC_UNUSED,
+     char *argv[]GCC_UNUSED)
+{
+    fprintf(stderr, "This program requires terminfo\n");
+    exit(EXIT_FAILURE);
+}
+#endif

@@ -7,7 +7,7 @@
 --                                 B O D Y                                  --
 --                                                                          --
 ------------------------------------------------------------------------------
--- Copyright (c) 2000 Free Software Foundation, Inc.                        --
+-- Copyright (c) 2000-2004,2006 Free Software Foundation, Inc.              --
 --                                                                          --
 -- Permission is hereby granted, free of charge, to any person obtaining a  --
 -- copy of this software and associated documentation files (the            --
@@ -35,7 +35,8 @@
 ------------------------------------------------------------------------------
 --  Author: Eugene V. Melaragno <aldomel@ix.netcom.com> 2000
 --  Version Control
---  $Revision: 1.1 $
+--  $Revision: 1.6 $
+--  $Date: 2006/06/25 14:24:40 $
 --  Binding Version 01.00
 ------------------------------------------------------------------------------
 with ncurses2.util; use ncurses2.util;
@@ -89,9 +90,11 @@ procedure ncurses2.menu_test is
       new String'("Platypi"),
       new String'("Lemurs"));
 
-   items_a : Item_Array_Access := new Item_Array (1 .. animals'Last + 1);
+   items_a : constant Item_Array_Access :=
+      new Item_Array (1 .. animals'Last + 1);
 
    tmp : Event_Mask;
+
    procedure xAdd (l : Line_Position; c : Column_Position; s : String) is
    begin
       Add (Line => l, Column => c, Str => s);
@@ -161,5 +164,5 @@ begin
 
    Delete (m);
 
-   tmp := Start_Mouse (No_Events);
+   End_Mouse (tmp);
 end ncurses2.menu_test;

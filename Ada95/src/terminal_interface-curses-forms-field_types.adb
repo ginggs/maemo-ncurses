@@ -7,7 +7,7 @@
 --                                 B O D Y                                  --
 --                                                                          --
 ------------------------------------------------------------------------------
--- Copyright (c) 1998 Free Software Foundation, Inc.                        --
+-- Copyright (c) 1998-2006,2008 Free Software Foundation, Inc.              --
 --                                                                          --
 -- Permission is hereby granted, free of charge, to any person obtaining a  --
 -- copy of this software and associated documentation files (the            --
@@ -35,10 +35,10 @@
 ------------------------------------------------------------------------------
 --  Author:  Juergen Pfeifer, 1996
 --  Version Control:
---  $Revision: 1.14 $
+--  $Revision: 1.20 $
+--  $Date: 2008/07/26 18:50:33 $
 --  Binding Version 01.00
 ------------------------------------------------------------------------------
-with Interfaces.C;
 with Terminal_Interface.Curses.Aux; use Terminal_Interface.Curses.Aux;
 with Ada.Unchecked_Deallocation;
 with Ada.Unchecked_Conversion;
@@ -49,11 +49,12 @@ with Ada.Unchecked_Conversion;
 --  |
 package body Terminal_Interface.Curses.Forms.Field_Types is
 
-   use type Interfaces.C.int;
    use type System.Address;
 
+   pragma Warnings (Off);
    function To_Argument_Access is new Ada.Unchecked_Conversion
      (System.Address, Argument_Access);
+   pragma Warnings (On);
 
    function Get_Fieldtype (F : Field) return C_Field_Type;
    pragma Import (C, Get_Fieldtype, "field_type");
@@ -139,12 +140,11 @@ package body Terminal_Interface.Curses.Forms.Field_Types is
       end if;
    end Free_Arg;
 
-
    procedure Wrap_Builtin (Fld : Field;
                            Typ : Field_Type'Class;
                            Cft : C_Field_Type := C_Builtin_Router)
    is
-      Usr_Arg   : System.Address := Get_Arg (Fld);
+      Usr_Arg   : constant System.Address := Get_Arg (Fld);
       Low_Level : constant C_Field_Type := Get_Fieldtype (Fld);
       Arg : Argument_Access;
       Res : Eti_Error;

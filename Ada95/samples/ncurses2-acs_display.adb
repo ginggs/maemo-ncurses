@@ -7,7 +7,7 @@
 --                                 B O D Y                                  --
 --                                                                          --
 ------------------------------------------------------------------------------
--- Copyright (c) 2000 Free Software Foundation, Inc.                        --
+-- Copyright (c) 2000-2006,2008 Free Software Foundation, Inc.              --
 --                                                                          --
 -- Permission is hereby granted, free of charge, to any person obtaining a  --
 -- copy of this software and associated documentation files (the            --
@@ -35,7 +35,8 @@
 ------------------------------------------------------------------------------
 --  Author: Eugene V. Melaragno <aldomel@ix.netcom.com> 2000
 --  Version Control
---  $Revision: 1.1 $
+--  $Revision: 1.6 $
+--  $Date: 2008/07/26 18:47:34 $
 --  Binding Version 01.00
 ------------------------------------------------------------------------------
 with ncurses2.util; use ncurses2.util;
@@ -55,10 +56,9 @@ procedure ncurses2.acs_display is
                         return Integer;
    procedure show_acs_chars;
 
-
    procedure show_upper_chars (first : Integer)  is
-      C1 : Boolean := (first = 128);
-      last : Integer := first + 31;
+      C1 : constant Boolean := (first = 128);
+      last : constant Integer := first + 31;
       package p is new ncurses2.genericPuts (200);
       use p;
       use p.BS;
@@ -91,9 +91,11 @@ procedure ncurses2.acs_display is
 
       for code in first .. last loop
          declare
-            row : Line_Position := Line_Position (4 + ((code - first) mod 16));
-            col : Column_Position := Column_Position (((code - first) / 16) *
-                                                      Integer (Columns) / 2);
+            row : constant Line_Position
+                := Line_Position (4 + ((code - first) mod 16));
+            col : constant Column_Position
+                := Column_Position (((code - first) / 16) *
+                                    Integer (Columns) / 2);
             tmp3 : String (1 .. 3);
             tmpx : String (1 .. Integer (Columns / 4));
             reply : Key_Code;
@@ -129,8 +131,8 @@ procedure ncurses2.acs_display is
                         code :  Attributed_Character)
                        return Integer is
       height : constant Integer := 16;
-      row : Line_Position := Line_Position (4 + (N mod height));
-      col : Column_Position := Column_Position ((N / height) *
+      row : constant Line_Position := Line_Position (4 + (N mod height));
+      col : constant Column_Position := Column_Position ((N / height) *
                                                 Integer (Columns) / 2);
       tmpx : String (1 .. Integer (Columns) / 3);
    begin
@@ -201,6 +203,9 @@ procedure ncurses2.acs_display is
       n := show_1_acs (n, "ACS_Not_Equal", ACS_Map (ACS_Not_Equal));
       n := show_1_acs (n, "ACS_Sterling", ACS_Map (ACS_Sterling));
 
+      if n = 0 then
+         raise Constraint_Error;
+      end if;
    end show_acs_chars;
 
    c1 : Key_Code;
@@ -228,4 +233,3 @@ begin
    Erase;
    End_Windows;
 end ncurses2.acs_display;
-
