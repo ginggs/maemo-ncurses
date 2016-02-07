@@ -1,7 +1,7 @@
 Source: ncurses
 Section: libs
 Priority: standard
-Build-Depends: quilt, debhelper (>= 3.0.23), libc6-dev-sparc64 [sparc], libc6-dev-s390x [s390], lib64gcc1 [sparc s390]
+Build-Depends: quilt, debhelper (>= 5), libc6-dev-sparc64 [sparc], libc6-dev-s390x [s390], lib64gcc1 [sparc s390]
 Maintainer: Daniel Jacobowitz <ncurses-maint@debian.org>
 Standards-Version: 3.6.1
 
