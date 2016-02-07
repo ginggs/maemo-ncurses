@@ -5,6 +5,7 @@ ncurses (5.7+20081213-1.maemo1+0m5+0cssu0) UNRELEASED; urgency=medium
   * Switch to debhelper compatibility level 5
   * Switch to source format 3.0 (quilt), remove quilt build dependency
     and patch/unpatch logic from debian/rules
+  * Clean obj-static as well to avoid FTBFSx2
 
  -- Graham Inggs <graham@nerve.org.za>  Wed, 03 Feb 2016 22:31:19 +0200
 

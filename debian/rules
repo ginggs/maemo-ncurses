@@ -172,6 +172,7 @@ clean:
 	dh_testroot
 	rm -f build install
 	rm -rf $(objdir)
+	rm -rf $(objdir-static)
 	rm -rf $(objdir-64)
 	rm -rf $(wobjdir)
 	rm -rf $(objdir-debug)
