@@ -73,25 +73,21 @@ etcterminfofiles=a/ansi c/cons25 c/cygwin d/dumb l/linux m/mach m/mach-bold \
 	x/xterm-256color s/screen-256color s/screen-256color-bce \
 	w/wsvt25 w/wsvt25m E/Eterm E/Eterm-color
 
-patch:
-	env QUILT_PATCHES=$(CURDIR)/debian/patches quilt push -a
-	touch $@
-
-$(objdir)/config.status: patch
+$(objdir)/config.status:
 	test -d $(objdir) || mkdir $(objdir)
 	cd $(objdir) && CFLAGS="$(CFLAGS)" $(srcdir)/configure \
 		$(CONFARGS) \
 		--with-install-prefix=$(fulltempdir) \
 		--enable-overwrite
 
-$(objdir-static)/config.status: patch
+$(objdir-static)/config.status:
 	test -d $(objdir-static) || mkdir $(objdir-static)
 	cd $(objdir-static) && CFLAGS="$(CFLAGS)" $(srcdir)/configure \
 		--without-shared --enable-static \
 		--with-install-prefix=$(fulltempdir) \
 		--enable-overwrite
 
-$(objdir-64)/config.status: patch
+$(objdir-64)/config.status:
 	test -d $(objdir-64) || mkdir $(objdir-64)
 	cd $(objdir-64) && CFLAGS="$(CFLAGS)" CC="gcc -m64" \
 		BUILD_CC="gcc" CXX="g++ -m64" \
@@ -102,7 +98,7 @@ $(objdir-64)/config.status: patch
 		--with-install-prefix=$(fulltempdir) \
 		--enable-overwrite --libdir=/usr/lib64
 
-$(objdir-debug)/config.status: patch
+$(objdir-debug)/config.status:
 	test -d $(objdir-debug) || mkdir $(objdir-debug)
 	cd $(objdir-debug) && \
 		CFLAGS="$(CFLAGS) -DTRACE" $(srcdir)/configure \
@@ -110,14 +106,14 @@ $(objdir-debug)/config.status: patch
 		--with-install-prefix=$(fulltempdir) \
 		--enable-overwrite
 
-$(wobjdir)/config.status: patch
+$(wobjdir)/config.status:
 	test -d $(wobjdir) || mkdir $(wobjdir)
 	cd $(wobjdir) && CFLAGS="$(CFLAGS)" $(srcdir)/configure \
 		$(CONFARGS) \
 		--with-install-prefix=$(fulltempdir) \
 		--disable-overwrite --enable-widec
 
-$(wobjdir-debug)/config.status: patch
+$(wobjdir-debug)/config.status:
 	test -d $(wobjdir-debug) || mkdir $(wobjdir-debug)
 	cd $(wobjdir-debug) && \
 		CFLAGS="$(CFLAGS) -DTRACE" $(srcdir)/configure \
@@ -174,7 +170,6 @@ build-wide-debug: $(wobjdir-debug)/config.status
 clean:
 	dh_testdir
 	dh_testroot
-	-env QUILT_PATCHES=$(CURDIR)/debian/patches quilt pop -a
 	rm -f build install
 	rm -rf $(objdir)
 	rm -rf $(objdir-64)
